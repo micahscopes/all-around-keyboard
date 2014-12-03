@@ -82,7 +82,7 @@ function arcTween(outerRadius, delay) {
   var context = new AudioContext;
 
   function frequency(i) {
-    return 440 * Math.pow(2, i / 12);
+    return 440 * Math.pow(2, (i - 9) / 12); // 0 is middle C
   }
 
   key.on(over + ".beep", function(d, i) {
