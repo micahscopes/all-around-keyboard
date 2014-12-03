@@ -22,16 +22,10 @@
 <script src="d3.js"></script>
 <script>
 
-var data = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"];
-
-data = data.concat(data, "C");
-
 var width = 960,
-    height = 500;
-
-var outerRadius = (height - 60),
-    innerRadius = outerRadius / 2.4,
-    cornerRadius = 10;
+    height = 500,
+    outerRadius = (height - 60),
+    innerRadius = outerRadius / 2.4;
 
 var over = "ontouchstart" in window ? "touchstart" : "mouseover",
     out = "ontouchstart" in window ? "touchend" : "mouseout";
@@ -46,7 +40,7 @@ var pie = d3.layout.pie()
 var arc = d3.svg.arc()
     .cornerRadius(4)
     .padRadius(outerRadius)
-    .innerRadius(function(d) { return /[♯♭]$/.test(d.data) ? innerRadius + 80 : innerRadius; });
+    .innerRadius(function(d) { return d.sharp ? innerRadius + 80 : innerRadius; });
 
 var svg = d3.select("body").append("svg")
     .attr("width", width)
@@ -55,10 +49,10 @@ var svg = d3.select("body").append("svg")
     .attr("transform", "translate(" + width / 2 + "," + (height - 40) + ")");
 
 var key = svg.selectAll("path")
-    .data(pie(data))
+    .data(sharpen(pie(repeat(["C", "D", "E", "F", "G", "A", "B"]))))
   .enter().append("path")
-    .each(function(d) { d.outerRadius = outerRadius - 20; })
-    .attr("class", function(d) { return "key key--" + (/[♯♭]$/.test(d.data) ? "black" : "white"); })
+    .each(function(d, i) { d.outerRadius = outerRadius - 20; })
+    .attr("class", function(d) { return "key key--" + (d.sharp ? "black" : "white"); })
     .attr("d", arc)
     .on(over, arcTween(outerRadius, 0))
     .on(out, arcTween(outerRadius - 20, 150));
@@ -73,6 +67,33 @@ function arcTween(outerRadius, delay) {
   };
 }
 
+function repeat(notes) {
+  return notes.concat(notes, notes[0]);
+}
+
+function sharpen(keys) {
+  var sharpOffset = (pie.endAngle() - pie.startAngle()) / (keys.length * 2);
+
+  for (var i = 0, n = keys.length - 1, k; i < n; ++i) {
+    if (/[CDFGA]/.test((k = keys[i]).data)) {
+      keys.splice(++i, 0, {
+        startAngle: k.startAngle + sharpOffset,
+        endAngle: k.endAngle + sharpOffset,
+        padAngle: k.padAngle,
+        sharp: true
+      });
+      ++n;
+    }
+    k.sharp = false;
+  }
+
+  for (var i = 0, n = keys.length; i < n; ++i) {
+    keys[i].frequency = 440 * Math.pow(2, (i - 9) / 12); // 0 is middle C
+  }
+
+  return keys.sort(function(a, b) { return a.sharp - b.sharp; });
+}
+
 (function() {
   var AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
   if (!AudioContext) return console.error("AudioContext not supported");
@@ -81,17 +102,14 @@ function arcTween(outerRadius, delay) {
 
   var context = new AudioContext;
 
-  function frequency(i) {
-    return 440 * Math.pow(2, (i - 9) / 12); // 0 is middle C
-  }
-
   key.on(over + ".beep", function(d, i) {
     var now = context.currentTime,
         oscillator = context.createOscillator(),
         gain = context.createGain();
-    oscillator.frequency.value = frequency(i);
+    oscillator.type = "square";
+    oscillator.frequency.value = d.frequency;
     gain.gain.linearRampToValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(.8, now + .1);
+    gain.gain.linearRampToValueAtTime(.6, now + .1);
     gain.gain.linearRampToValueAtTime(0, now + 1);
     oscillator.connect(gain);
     gain.connect(context.destination);
