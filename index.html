@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.key {
+  stroke-width: 1.5px;
+  transition: fill 250ms linear, stroke 250ms linear;
+  transition-delay: 150ms;
+}
+
+.key:hover {
+  transition-delay: 0;
+}
+
+.key--white { fill: #fff; stroke: #777; }
+.key--black { fill: #333; stroke: #000; }
+.key--white:hover { fill: cyan; stroke: #00999b; }
+.key--black:hover { fill: magenta; stroke: #910099; }
+
+</style>
+<body>
+<script src="d3.js"></script>
+<script>
+
+var data = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"];
+
+data = data.concat(data, "C");
+
+var width = 960,
+    height = 500;
+
+var outerRadius = (height - 60),
+    innerRadius = outerRadius / 2.4,
+    cornerRadius = 10;
+
+var over = "ontouchstart" in window ? "touchstart" : "mouseover",
+    out = "ontouchstart" in window ? "touchend" : "mouseout";
+
+var pie = d3.layout.pie()
+    .startAngle(-Math.PI / 2)
+    .endAngle(Math.PI / 2)
+    .padAngle(.01)
+    .value(function() { return 1; })
+    .sort(null);
+
+var arc = d3.svg.arc()
+    .cornerRadius(4)
+    .padRadius(outerRadius)
+    .innerRadius(function(d) { return /[♯♭]$/.test(d.data) ? innerRadius + 80 : innerRadius; });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + (height - 40) + ")");
+
+var key = svg.selectAll("path")
+    .data(pie(data))
+  .enter().append("path")
+    .each(function(d) { d.outerRadius = outerRadius - 20; })
+    .attr("class", function(d) { return "key key--" + (/[♯♭]$/.test(d.data) ? "black" : "white"); })
+    .attr("d", arc)
+    .on(over, arcTween(outerRadius, 0))
+    .on(out, arcTween(outerRadius - 20, 150));
+
+function arcTween(outerRadius, delay) {
+  return function() {
+    d3.event.preventDefault();
+    d3.select(this).transition().delay(delay).attrTween("d", function(d) {
+      var i = d3.interpolate(d.outerRadius, outerRadius);
+      return function(t) { d.outerRadius = i(t); return arc(d); };
+    });
+  };
+}
+
+(function() {
+  var AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+  if (!AudioContext) return console.error("AudioContext not supported");
+  if (!OscillatorNode.prototype.start) OscillatorNode.prototype.start = OscillatorNode.prototype.noteOn;
+  if (!OscillatorNode.prototype.stop) OscillatorNode.prototype.stop = OscillatorNode.prototype.noteOff;
+
+  var context = new AudioContext;
+
+  function frequency(i) {
+    return 440 * Math.pow(2, i / 12);
+  }
+
+  key.on(over + ".beep", function(d, i) {
+    var now = context.currentTime,
+        oscillator = context.createOscillator(),
+        gain = context.createGain();
+    oscillator.frequency.value = frequency(i);
+    gain.gain.linearRampToValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(1, now + .1);
+    gain.gain.linearRampToValueAtTime(0, now + 1);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(0);
+    setTimeout(function() { oscillator.stop(); }, 1500);
+  });
+})();
+
+</script>
