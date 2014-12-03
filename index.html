@@ -91,7 +91,7 @@ function arcTween(outerRadius, delay) {
         gain = context.createGain();
     oscillator.frequency.value = frequency(i);
     gain.gain.linearRampToValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(1, now + .1);
+    gain.gain.linearRampToValueAtTime(.8, now + .1);
     gain.gain.linearRampToValueAtTime(0, now + 1);
     oscillator.connect(gain);
     gain.connect(context.destination);
