@@ -72,13 +72,13 @@ function repeat(notes) {
 }
 
 function sharpen(keys) {
-  var sharpOffset = (pie.endAngle() - pie.startAngle()) / (keys.length * 2);
+  var keyWidth = (pie.endAngle() - pie.startAngle()) / keys.length;
 
   for (var i = 0, n = keys.length - 1, k; i < n; ++i) {
     if (/[CDFGA]/.test((k = keys[i]).data)) {
       keys.splice(++i, 0, {
-        startAngle: k.startAngle + sharpOffset,
-        endAngle: k.endAngle + sharpOffset,
+        startAngle: k.startAngle + keyWidth * .65,
+        endAngle: k.endAngle + keyWidth * .35,
         padAngle: k.padAngle,
         sharp: true
       });
