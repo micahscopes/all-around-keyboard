@@ -31,8 +31,8 @@ var over = "ontouchstart" in window ? "touchstart" : "mouseover",
     out = "ontouchstart" in window ? "touchend" : "mouseout";
 
 var pie = d3.layout.pie()
-    .startAngle(-Math.PI / 2)
-    .endAngle(Math.PI / 2)
+    .startAngle(-Math.PI)
+    .endAngle(Math.PI)
     .padAngle(.01)
     .value(function() { return 1; })
     .sort(null);
