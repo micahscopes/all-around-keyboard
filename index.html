@@ -109,7 +109,7 @@ function sharpen(keys) {
     oscillator.type = "saw";
     oscillator.frequency.value = d.frequency;
     gain.gain.linearRampToValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(.2, now + .1);
+    gain.gain.linearRampToValueAtTime(.1, now + .1);
     gain.gain.linearRampToValueAtTime(0, now + 1);
     oscillator.connect(gain);
     gain.connect(context.destination);
