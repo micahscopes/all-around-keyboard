@@ -106,10 +106,10 @@ function sharpen(keys) {
     var now = context.currentTime,
         oscillator = context.createOscillator(),
         gain = context.createGain();
-    oscillator.type = "square";
+    oscillator.type = "saw";
     oscillator.frequency.value = d.frequency;
     gain.gain.linearRampToValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(.6, now + .1);
+    gain.gain.linearRampToValueAtTime(.2, now + .1);
     gain.gain.linearRampToValueAtTime(0, now + 1);
     oscillator.connect(gain);
     gain.connect(context.destination);
