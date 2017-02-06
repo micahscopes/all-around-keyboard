@@ -93,13 +93,14 @@ function arcTween(outerRadius, delay) {
   var context = new AudioContext;
 
   key.on(over + ".beep", function(d, i) {
+    console.log("hey!");
     var now = context.currentTime,
         oscillator = context.createOscillator(),
         gain = context.createGain();
-    oscillator.type = "sin";
+    oscillator.type = "sine";
     oscillator.frequency.value = d.frequency;
     gain.gain.linearRampToValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(.05, now + .05);
+    gain.gain.linearRampToValueAtTime(.4, now + .05);
     gain.gain.linearRampToValueAtTime(0, now + 0.2);
     oscillator.connect(gain);
     gain.connect(context.destination);
