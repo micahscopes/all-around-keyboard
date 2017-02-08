@@ -22,7 +22,6 @@
 
 
 ## [examples](examples.html):
-(click to open)
 <iframe src="examples.html" frameborder="0" scrolling="no" width="110%" onload="this.style.height=this.contentDocument.body.scrollHeight +'px';"></iframe>
 
 <style>
