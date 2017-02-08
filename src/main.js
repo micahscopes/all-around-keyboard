@@ -43,7 +43,7 @@ customElements.define('all-around-keyboard', class extends Component {
           return val*180/Math.PI;
         }
       }),
-      thickness: prop.number({ attribute: true, default: 100 }),
+      depth: prop.number({ attribute: true, default: 100 }),
       width: prop.number({ attribute: true, default: 500 }),
       overlapping: prop.number({ attribute: true, default: 2.75 })
     };
@@ -89,7 +89,7 @@ customElements.define('all-around-keyboard', class extends Component {
 
     var outerRadius = this.width/(2*Math.sin(Math.min(this.sweep,Math.PI)/2));
     var chordLength = outerRadius*2*Math.sin(this.sweep/2);
-    var innerRadius = outerRadius - this.thickness;
+    var innerRadius = outerRadius - this.depth;
     var startAngle = -this.sweep/2;
     var endAngle = this.sweep/2;
     // sagitta, long and short
@@ -98,7 +98,7 @@ customElements.define('all-around-keyboard', class extends Component {
       height = outerRadius + Math.sqrt(Math.pow(outerRadius,2) - Math.pow(chordLength/2,2));
     } else {
       height = outerRadius - Math.sqrt(
-        Math.pow(outerRadius,2) - Math.pow(chordLength/2,2)) + this.thickness*Math.cos(this.sweep/2)
+        Math.pow(outerRadius,2) - Math.pow(chordLength/2,2)) + this.depth*Math.cos(this.sweep/2)
     }
 
 
@@ -152,12 +152,12 @@ customElements.define('all-around-keyboard', class extends Component {
 
     var keyArc = arc()
         .cornerRadius(2)
-        // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - thickness; })
+        // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
         .innerRadius(function(d) {
-          return d.sharp ? innerRadius + elem.thickness/(elem.overlapping+2): innerRadius;
+          return d.sharp ? innerRadius + elem.depth/(elem.overlapping+2): innerRadius;
         })
         .outerRadius(function(d) {
-          return d.sharp ? outerRadius : outerRadius - elem.thickness/(elem.overlapping+2);
+          return d.sharp ? outerRadius : outerRadius - elem.depth/(elem.overlapping+2);
         });
 
 

@@ -8,7 +8,7 @@ a web component for round pianos
 <all-around-keyboard  notes-in-octave=12
                       raised-keys="[2,4,7,9,11]"
                       sweep=270 octaves=2
-                      thickness=100 width=500
+                      depth=100 width=500
                       overlapping=0.75>
 </all-around-keyboard>
 ```
