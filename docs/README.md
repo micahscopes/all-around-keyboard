@@ -80,6 +80,8 @@ a web component for round pianos
                       overlapping="0.75">
 </all-around-keyboard>
 
+<script src="dist/all-around-keyboard.js"></script>
+
 
 <style>
   body {
