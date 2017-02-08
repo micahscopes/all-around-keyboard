@@ -17,7 +17,7 @@
   2. gain
   3. integrate with [this badass dx7 emulator](https://github.com/mmontag/dx7-synth-js)
 - more styles
-- dynamic redrawing
+- fix bugs
 - and so much more (?)
 
 
