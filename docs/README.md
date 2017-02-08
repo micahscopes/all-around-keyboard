@@ -16,11 +16,13 @@
   1. enable/disable
   2. gain
   3. integrate with [this badass dx7 emulator](https://github.com/mmontag/dx7-synth-js)
-- styling
+- more styles
+- dynamic redrawing
 - and so much more (?)
 
 
-## demonstration:
+## [examples](examples.html):
+(click to open)
 <iframe src="examples.html" frameborder="0" scrolling="no" width="110%" onload="this.style.height=this.contentDocument.body.scrollHeight +'px';"></iframe>
 
 <style>
