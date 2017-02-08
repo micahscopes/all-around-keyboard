@@ -1,7 +1,7 @@
 # all-around keyboards
 a web component for round pianos, based on https://bl.ocks.org/mbostock/5723d93e4f617b542991
 
-example:
+### example:
 ```html
 <all-around-keyboard  notes-in-octave="12"
                       raised-keys="[2,4,7,9,11]"

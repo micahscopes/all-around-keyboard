@@ -9,6 +9,14 @@ const audio = Symbol();
 const shadowSVG = Symbol();
 
 const css = `
+all-around-keyboard {
+  display: block;
+  padding: 5px;
+}
+:host {
+  display: block;
+  padding: 5px;
+}
 .key {
   stroke-width: 1.5px;
 }
@@ -17,11 +25,9 @@ const css = `
 .key--black { fill: #333; stroke: #000; }
 .key--white:hover { fill: yellow; stroke: #00999b; }
 .key--black:hover { fill: yellow; stroke: #910099; }
-
-svg {border: solid #312399 2px; padding: 25px;}
 `
 
-customElements.define('round-keyboard', class extends Component {
+customElements.define('all-around-keyboard', class extends Component {
   static get props () {
     return {
       // By declaring the property an attribute, we can now pass an initial value
@@ -50,7 +56,12 @@ customElements.define('round-keyboard', class extends Component {
     if (!OscillatorNode.prototype.start) OscillatorNode.prototype.start = OscillatorNode.prototype.noteOn;
     if (!OscillatorNode.prototype.stop) OscillatorNode.prototype.stop = OscillatorNode.prototype.noteOff;
 
-    this[audio] = new AudioContext;
+    if(!window[audio]){
+      window[audio] = new AudioContext;
+    }
+
+    this[audio] = window[audio];
+
     this[shadowSVG] = document.createElementNS(namespaces.svg,"svg");
     select(this[shadowSVG]).append("g");
 
@@ -69,12 +80,12 @@ customElements.define('round-keyboard', class extends Component {
     // By separating the strings (and not using template literals or string
     // concatenation) it ensures the strings are diffed indepenedently. If
     // you select "Count" with your mouse, it will not deselect whenr endered.
-    return [h('style',css), h('h1',"okay")];
+    return [h('div'),h('style',css)];
   }
 
   renderedCallback() {
     var elem = this;
-    this.shadowRoot.appendChild(this[shadowSVG]);
+    this.shadowRoot.children[0].appendChild(this[shadowSVG]);
 
     var outerRadius = this.width/(2*Math.sin(Math.min(this.sweep,Math.PI)/2));
     var chordLength = outerRadius*2*Math.sin(this.sweep/2);
@@ -143,10 +154,10 @@ customElements.define('round-keyboard', class extends Component {
         .cornerRadius(2)
         // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - thickness; })
         .innerRadius(function(d) {
-          return d.sharp ? innerRadius + elem.thickness/elem.overlapping: innerRadius;
+          return d.sharp ? innerRadius + elem.thickness/(elem.overlapping+2): innerRadius;
         })
         .outerRadius(function(d) {
-          return d.sharp ? outerRadius : outerRadius - elem.thickness/elem.overlapping;
+          return d.sharp ? outerRadius : outerRadius - elem.thickness/(elem.overlapping+2);
         });
 
 

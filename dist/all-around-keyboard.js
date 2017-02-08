@@ -13222,9 +13222,9 @@ var     HTMLElement$1 = root.HTMLElement;
     var audio = Symbol();
     var shadowSVG = Symbol();
 
-    var css = '\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--white { fill: #fff; stroke: #777; }\n.key--black { fill: #333; stroke: #000; }\n.key--white:hover { fill: yellow; stroke: #00999b; }\n.key--black:hover { fill: yellow; stroke: #910099; }\n\nsvg {border: solid #312399 2px; padding: 25px;}\n';
+    var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--white { fill: #fff; stroke: #777; }\n.key--black { fill: #333; stroke: #000; }\n.key--white:hover { fill: yellow; stroke: #00999b; }\n.key--black:hover { fill: yellow; stroke: #910099; }\n';
 
-    customElements.define('round-keyboard', function (_Component) {
+    customElements.define('all-around-keyboard', function (_Component) {
       inherits(_class, _Component);
 
       function _class() {
@@ -13242,7 +13242,12 @@ var     HTMLElement$1 = root.HTMLElement;
           if (!OscillatorNode.prototype.start) OscillatorNode.prototype.start = OscillatorNode.prototype.noteOn;
           if (!OscillatorNode.prototype.stop) OscillatorNode.prototype.stop = OscillatorNode.prototype.noteOff;
 
-          this[audio] = new AudioContext();
+          if (!window[audio]) {
+            window[audio] = new AudioContext();
+          }
+
+          this[audio] = window[audio];
+
           this[shadowSVG] = document.createElementNS(namespaces.svg, "svg");
           select(this[shadowSVG]).append("g");
         }
@@ -13262,13 +13267,13 @@ var     HTMLElement$1 = root.HTMLElement;
           // By separating the strings (and not using template literals or string
           // concatenation) it ensures the strings are diffed indepenedently. If
           // you select "Count" with your mouse, it will not deselect whenr endered.
-          return [h('style', css), h('h1', "okay")];
+          return [h('div'), h('style', css)];
         }
       }, {
         key: 'renderedCallback',
         value: function renderedCallback() {
           var elem = this;
-          this.shadowRoot.appendChild(this[shadowSVG]);
+          this.shadowRoot.children[0].appendChild(this[shadowSVG]);
 
           var outerRadius = this.width / (2 * Math.sin(Math.min(this.sweep, Math.PI) / 2));
           var chordLength = outerRadius * 2 * Math.sin(this.sweep / 2);
@@ -13335,9 +13340,9 @@ var     HTMLElement$1 = root.HTMLElement;
           var keyArc = arc().cornerRadius(2)
           // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - thickness; })
           .innerRadius(function (d) {
-            return d.sharp ? innerRadius + elem.thickness / elem.overlapping : innerRadius;
+            return d.sharp ? innerRadius + elem.thickness / (elem.overlapping + 2) : innerRadius;
           }).outerRadius(function (d) {
-            return d.sharp ? outerRadius : outerRadius - elem.thickness / elem.overlapping;
+            return d.sharp ? outerRadius : outerRadius - elem.thickness / (elem.overlapping + 2);
           });
 
           // DATA JOIN
