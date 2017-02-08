@@ -3,12 +3,15 @@
 <style>
   body {
     background: aquamarine;
+    font-size: 2em;
+    font-family: sans;
+    color: #4466bb;
   }
 
   all-around-keyboard {
     margin: 50px;
     display: inline-block;
-    border: solid grey 1px;
+    border: solid #4466bb 1px;
     padding: 40px;
   }
 </style>
@@ -20,6 +23,14 @@
                       thickness="100" width="500"
                       overlapping="0.75">
 </all-around-keyboard>
+
+<all-around-keyboard  notes-in-octave="12"
+                      raised-keys="[2,5,7,9,11]"
+                      sweep=4 octaves="3"
+                      thickness="100" width="500"
+                      overlapping="0.75">
+</all-around-keyboard>
+
 
 <all-around-keyboard  notes-in-octave="12"
                       raised-keys="[2,4,7,9,11]"
@@ -64,4 +75,4 @@
 </all-around-keyboard>
 
 
-<script src="../dist/all-around-keyboard.js"></script>
+<script src="dist/all-around-keyboard.js"></script>
