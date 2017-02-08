@@ -19,10 +19,10 @@
 
 
 ## demonstration:
-<iframe src="examples.html" width="100%" onload="this.style.height=this.contentDocument.body.scrollHeight +'px';"></iframe>
+<iframe src="examples.html" frameborder="0" scrolling="no" width="110%" onload="this.style.height=this.contentDocument.body.scrollHeight +'px';"></iframe>
 
 <style>
-  body {
+  body, main_content_wrap {
     background: aquamarine;
     font-family: sans;
     color: #4466bb;
