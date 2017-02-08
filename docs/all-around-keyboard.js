@@ -1,1 +1,1 @@
-dist/all-around-keyboard.js
+../dist/all-around-keyboard.js
