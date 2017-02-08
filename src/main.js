@@ -1,5 +1,4 @@
 import 'skatejs-web-components';
-import 'shady-dom';
 import { define, h, Component, prop } from 'skatejs';
 // import { makeKeys } from './keyboard.js'
 import { arc, pie } from 'd3-shape';
