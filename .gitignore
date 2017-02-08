@@ -6,5 +6,5 @@ logs
 # Dependency directories
 node_modules
 .npm
-
+.ipynb_checkpoints
 

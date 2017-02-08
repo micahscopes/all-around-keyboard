@@ -1,0 +1,8 @@
+{
+  "parser": "babel-eslint",
+  "extends": "es2015",
+  "env": {
+    "browser": true,
+    "mocha": false
+  }
+}
