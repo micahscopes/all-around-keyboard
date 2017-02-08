@@ -31,7 +31,7 @@
   body, #main_content_wrap {
     background: aquamarine;
     font-family: sans;
-    color: #4466bb;
+    color: #mediumslateblue;
   }
 </style>
 
