@@ -19,7 +19,7 @@
 
 
 ## demonstration:
-<iframe src="examples.html"></iframe>
+<iframe src="examples.html" width="100%"></iframe>
 
 <style>
   body {
