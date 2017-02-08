@@ -1,5 +1,7 @@
 # all-around keyboards
-a web component for round pianos, based on https://bl.ocks.org/mbostock/5723d93e4f617b542991
+a web component for round pianos
+
+### [demo](http://micahscopes.github.io/all-around-keyboard)
 
 ### example:
 ```html
@@ -18,3 +20,5 @@ a web component for round pianos, based on https://bl.ocks.org/mbostock/5723d93e
   2. gain
 - style options
 - state (?)
+
+#### *inspired by mbostock's example for d3: https://bl.ocks.org/mbostock/5723d93e4f617b542991*
