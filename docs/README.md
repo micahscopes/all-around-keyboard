@@ -19,7 +19,7 @@
 
 
 ## demonstration:
-<iframe src="examples.html" width="100%"></iframe>
+<iframe src="examples.html" width="100%" onload="this.style.height=this.contentDocument.body.scrollHeight +'px';"></iframe>
 
 <style>
   body {
