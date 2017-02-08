@@ -1,9 +1,4 @@
-# all-around keyboards
-a web component for round pianos
-
-### [demo](http://micahscopes.github.io/all-around-keyboard)
-
-### example:
+## usage:
 ```html
 <all-around-keyboard  notes-in-octave=12
                       raised-keys="[2,4,7,9,11]"
@@ -20,67 +15,37 @@ a web component for round pianos
   2. gain
 - style options
 - state (?)
+- so much more (?)
 
-### *inspired by mbostock's [arc piano example for d3](https://bl.ocks.org/mbostock/5723d93e4f617b542991) *
 
-<all-around-keyboard  notes-in-octave="12"
-                      raised-keys="[2,4,7,9,11]"
-                      sweep=4 octaves="3"
-                      thickness="100" width="500"
-                      overlapping="0.75">
+## demonstration:
+
+<all-around-keyboard  notes-in-octave="12" raised-keys="[2,4,7,9,11]" sweep=4 octaves="3" thickness="100" width="500" overlapping="0.75">
 </all-around-keyboard>
 
-<all-around-keyboard  notes-in-octave="12"
-                      raised-keys="[2,5,7,9,11]"
-                      sweep=4 octaves="3"
-                      thickness="100" width="500"
-                      overlapping="0.75">
+<all-around-keyboard  notes-in-octave="12" raised-keys="[2,5,7,9,11]" sweep=4 octaves="3" thickness="100" width="500" overlapping="0.75">
 </all-around-keyboard>
 
 
-<all-around-keyboard  notes-in-octave="12"
-                      raised-keys="[2,4,7,9,11]"
-                      sweep=180 octaves="2"
-                      thickness="130" width="500"
-                      overlapping="0.75">
+<all-around-keyboard  notes-in-octave="12" raised-keys="[2,4,7,9,11]" sweep=180 octaves="2" thickness="130" width="500" overlapping="0.75">
 </all-around-keyboard>
 
-<all-around-keyboard  notes-in-octave="12"
-                      raised-keys="[2,4,7,9,11]"
-                      sweep=360 octaves="2"
-                      thickness="200" width="500"
-                      overlapping="0.75">
+<all-around-keyboard  notes-in-octave="12" raised-keys="[2,4,7,9,11]" sweep=360 octaves="2" thickness="200" width="500" overlapping="0.75">
 </all-around-keyboard>
 
-<all-around-keyboard  notes-in-octave="12"
-                      raised-keys="[2,4,7,9,11]"
-                      sweep=360 octaves="1"
-                      thickness="200" width="500"
-                      overlapping="0.75">
+<all-around-keyboard  notes-in-octave="12" raised-keys="[2,4,7,9,11]" sweep=360 octaves="1" thickness="200" width="500" overlapping="0.75">
 </all-around-keyboard>
 
-<all-around-keyboard  notes-in-octave="12"
-                      raised-keys="[2,5,7,9,11]"
-                      sweep=120 octaves="2"
-                      thickness="200" width="500"
-                      overlapping="0.75">
+<all-around-keyboard  notes-in-octave="12" raised-keys="[2,5,7,9,11]" sweep=120 octaves="2" thickness="200" width="500" overlapping="0.75">
 </all-around-keyboard>
 
-<all-around-keyboard  notes-in-octave="16"
-                      raised-keys="[2,4,6,9,11,13,15]"
-                      sweep=270 octaves="2"
-                      thickness="220" width="500"
-                      overlapping="0.75">
+<all-around-keyboard  notes-in-octave="16" raised-keys="[2,4,6,9,11,13,15]" sweep=270 octaves="2" thickness="220" width="500" overlapping="0.75">
 </all-around-keyboard>
 
-<all-around-keyboard  notes-in-octave="31"
-                      raised-keys="[2,4,6,11,13,15,19,23,25,28,30]"
-                      sweep=270 octaves="1"
-                      thickness="220" width="500"
-                      overlapping="0.75">
+<all-around-keyboard  notes-in-octave="31" raised-keys="[2,4,6,11,13,15,19,23,25,28,30]" sweep=270 octaves="1" thickness="220" width="500" overlapping="0.75">
 </all-around-keyboard>
 
-<script src="dist/all-around-keyboard.js"></script>
+<script src="all-around-keyboard.js"></script>
 
 
 <style>
@@ -98,3 +63,5 @@ a web component for round pianos
     padding: 40px;
   }
 </style>
+
+### *inspired by mbostock's [arc piano example for d3](https://bl.ocks.org/mbostock/5723d93e4f617b542991) *
