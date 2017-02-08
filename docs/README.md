@@ -22,7 +22,10 @@
 <iframe src="examples.html" frameborder="0" scrolling="no" width="110%" onload="this.style.height=this.contentDocument.body.scrollHeight +'px';"></iframe>
 
 <style>
-  body, main_content_wrap {
+  #header_wrap {
+    background: currentColor;
+  }
+  body, #main_content_wrap {
     background: aquamarine;
     font-family: sans;
     color: #4466bb;
