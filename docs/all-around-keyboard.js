@@ -11326,7 +11326,6 @@ var     HTMLElement$1 = root.HTMLElement;
             lowerCount++;
           }
         }
-        // let lowerCount = octaves*tones.length - octaves*(raisedPattern.length/raisedPatternOctaves);
 
         for (k = 0, l = 0; k < tones.length * octaves; k++) {
           var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
