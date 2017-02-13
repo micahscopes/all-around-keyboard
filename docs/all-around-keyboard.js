@@ -1,8 +1,5 @@
-(function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
-    (factory());
-}(this, function () { 'use strict';
+(function () {
+    'use strict';
 
     var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {}
 
@@ -11409,7 +11406,7 @@ var     HTMLElement$1 = root.HTMLElement;
       }
     };
 
-    function constant (x) {
+    function constant$1 (x) {
       return function constant() {
         return x;
       };
@@ -11499,7 +11496,7 @@ var     HTMLElement$1 = root.HTMLElement;
     function arc () {
       var innerRadius = arcInnerRadius,
           outerRadius = arcOuterRadius,
-          cornerRadius = constant(0),
+          cornerRadius = constant$1(0),
           padRadius = null,
           startAngle = arcStartAngle,
           endAngle = arcEndAngle,
@@ -11646,31 +11643,31 @@ var     HTMLElement$1 = root.HTMLElement;
       };
 
       arc.innerRadius = function (_) {
-        return arguments.length ? (innerRadius = typeof _ === "function" ? _ : constant(+_), arc) : innerRadius;
+        return arguments.length ? (innerRadius = typeof _ === "function" ? _ : constant$1(+_), arc) : innerRadius;
       };
 
       arc.outerRadius = function (_) {
-        return arguments.length ? (outerRadius = typeof _ === "function" ? _ : constant(+_), arc) : outerRadius;
+        return arguments.length ? (outerRadius = typeof _ === "function" ? _ : constant$1(+_), arc) : outerRadius;
       };
 
       arc.cornerRadius = function (_) {
-        return arguments.length ? (cornerRadius = typeof _ === "function" ? _ : constant(+_), arc) : cornerRadius;
+        return arguments.length ? (cornerRadius = typeof _ === "function" ? _ : constant$1(+_), arc) : cornerRadius;
       };
 
       arc.padRadius = function (_) {
-        return arguments.length ? (padRadius = _ == null ? null : typeof _ === "function" ? _ : constant(+_), arc) : padRadius;
+        return arguments.length ? (padRadius = _ == null ? null : typeof _ === "function" ? _ : constant$1(+_), arc) : padRadius;
       };
 
       arc.startAngle = function (_) {
-        return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant(+_), arc) : startAngle;
+        return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant$1(+_), arc) : startAngle;
       };
 
       arc.endAngle = function (_) {
-        return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant(+_), arc) : endAngle;
+        return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant$1(+_), arc) : endAngle;
       };
 
       arc.padAngle = function (_) {
-        return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant(+_), arc) : padAngle;
+        return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant$1(+_), arc) : padAngle;
       };
 
       arc.context = function (_) {
@@ -11678,92 +11675,6 @@ var     HTMLElement$1 = root.HTMLElement;
       };
 
       return arc;
-    }
-
-    function descending (a, b) {
-      return b < a ? -1 : b > a ? 1 : b >= a ? 0 : NaN;
-    }
-
-    function identity (d) {
-      return d;
-    }
-
-    function pie () {
-      var value = identity,
-          sortValues = descending,
-          sort = null,
-          startAngle = constant(0),
-          endAngle = constant(tau$1),
-          padAngle = constant(0);
-
-      function pie(data) {
-        var i,
-            n = data.length,
-            j,
-            k,
-            sum = 0,
-            index = new Array(n),
-            arcs = new Array(n),
-            a0 = +startAngle.apply(this, arguments),
-            da = Math.min(tau$1, Math.max(-tau$1, endAngle.apply(this, arguments) - a0)),
-            a1,
-            p = Math.min(Math.abs(da) / n, padAngle.apply(this, arguments)),
-            pa = p * (da < 0 ? -1 : 1),
-            v;
-
-        for (i = 0; i < n; ++i) {
-          if ((v = arcs[index[i] = i] = +value(data[i], i, data)) > 0) {
-            sum += v;
-          }
-        }
-
-        // Optionally sort the arcs by previously-computed values or by data.
-        if (sortValues != null) index.sort(function (i, j) {
-          return sortValues(arcs[i], arcs[j]);
-        });else if (sort != null) index.sort(function (i, j) {
-          return sort(data[i], data[j]);
-        });
-
-        // Compute the arcs! They are stored in the original data's order.
-        for (i = 0, k = sum ? (da - n * pa) / sum : 0; i < n; ++i, a0 = a1) {
-          j = index[i], v = arcs[j], a1 = a0 + (v > 0 ? v * k : 0) + pa, arcs[j] = {
-            data: data[j],
-            index: i,
-            value: v,
-            startAngle: a0,
-            endAngle: a1,
-            padAngle: p
-          };
-        }
-
-        return arcs;
-      }
-
-      pie.value = function (_) {
-        return arguments.length ? (value = typeof _ === "function" ? _ : constant(+_), pie) : value;
-      };
-
-      pie.sortValues = function (_) {
-        return arguments.length ? (sortValues = _, sort = null, pie) : sortValues;
-      };
-
-      pie.sort = function (_) {
-        return arguments.length ? (sort = _, sortValues = null, pie) : sort;
-      };
-
-      pie.startAngle = function (_) {
-        return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant(+_), pie) : startAngle;
-      };
-
-      pie.endAngle = function (_) {
-        return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant(+_), pie) : endAngle;
-      };
-
-      pie.padAngle = function (_) {
-        return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant(+_), pie) : padAngle;
-      };
-
-      return pie;
     }
 
     var kr = Math.sin(pi$1 / 10) / Math.sin(7 * pi$1 / 10);
@@ -12382,6 +12293,131 @@ var     HTMLElement$1 = root.HTMLElement;
       }
     };
 
+    var Pentatonic = [2, 4, 7, 9, 11];
+
+    function constant(x) {
+      return function constant() {
+        return x;
+      };
+    }
+
+    var keyLayout = function keyLayout() {
+      var octaves = 1;
+      var octaveSize = 12;
+      var raisedPattern = Pentatonic;
+      var isRaised = void 0;
+      var startAngle = constant(-Math.PI);
+      var endAngle = constant(Math.PI);
+      var frequency = void 0;
+      //
+      function keyLayout(tones) {
+        if (!tones) {
+          for (var i = 0, tones = []; i < octaveSize; i++) {
+            tones.push(i + 1);
+          }
+        }
+        if (!isRaised) {
+          isRaised = function isRaised(k) {
+            return raisedPattern.includes(k);
+          };
+        }
+        if (!frequency) {
+          frequency = function frequency(k) {
+            return 440 * Math.pow(2, (k - 9) / tones.length);
+          };
+        }
+
+        var raisedPatternOctaves = Math.ceil(Math.max.apply(Math, raisedPattern) / tones.length);
+        var allKeys = [],
+            raisedKeys = [],
+            lowerKeys = [];
+        var lowerCount = octaves * tones.length - octaves * (raisedPattern.length / raisedPatternOctaves);
+
+        var k = void 0,
+            l = void 0;
+        for (k = 0, l = 0; k < tones.length * octaves; k++) {
+          var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
+          var key = { data: tones[k % tones.length], index: k + 1 };
+          key.frequency = frequency(key.index);
+          if (isRaised(key.index % (raisedPatternOctaves * tones.length))) {
+            key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
+            key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
+            key.raised = true;
+            raisedKeys.push(key);
+          } else {
+            key.startAngle = startAngle(k) + l * diffAngle;
+            key.endAngle = key.startAngle + diffAngle;
+            key.raised = false;
+            lowerKeys.push(key);
+            l++;
+          }
+        }
+        return lowerKeys.concat(raisedKeys);
+      }
+
+      // for (var i = 0, n = numTones*octaves; i < n; ++i) {
+      //   keys[i].frequency = 440 * Math.pow(2, (i - 9) / numTones); // 0 is middle C
+      // }
+
+
+      //  let isRaised = k => raisedPattern.includes(k);
+      keyLayout.isRaised = function (_) {
+        if (arguments.length) {
+          isRaised = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let raisedPattern = Pentatonic;
+      keyLayout.raisedPattern = function (_) {
+        if (_ && _.length) {
+          raisedPattern = _;
+        }
+        return keyLayout;
+      };
+
+      //  let octaves = 1;
+      keyLayout.octaves = function (_) {
+        if (typeof _ === "number") {
+          raisedPattern = _;
+        }
+        return keyLayout;
+      };
+
+      // let startAngle = constant(-Math.PI);
+      keyLayout.startAngle = function (_) {
+        if (arguments.length) {
+          startAngle = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let frequency;
+      keyLayout.frequency = function (_) {
+        if (arguments.length) {
+          frequency = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let endAngle = constant(Math.PI);
+      keyLayout.endAngle = function (_) {
+        if (arguments.length) {
+          endAngle = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      keyLayout.octaveSize = function (_) {
+        if (typeof _ === "number") {
+          octaveSize = _;
+        }
+        return keyLayout;
+      };
+
+      return keyLayout;
+    };
+
     var xhtml = "http://www.w3.org/1999/xhtml";
 
     var namespaces = {
@@ -12634,7 +12670,7 @@ var     HTMLElement$1 = root.HTMLElement;
       }
     };
 
-    function constant$1 (x) {
+    function constant$2 (x) {
       return function () {
         return x;
       };
@@ -12725,7 +12761,7 @@ var     HTMLElement$1 = root.HTMLElement;
           parents = this._parents,
           groups = this._groups;
 
-      if (typeof value !== "function") value = constant$1(value);
+      if (typeof value !== "function") value = constant$2(value);
 
       for (var m = groups.length, update = new Array(m), enter = new Array(m), exit = new Array(m), j = 0; j < m; ++j) {
         var parent = parents[j],
@@ -13293,84 +13329,35 @@ var     HTMLElement$1 = root.HTMLElement;
 
           var g = svg.select("g").attr("transform", "translate(" + this.width / 2 + "," + outerRadius + ")");
 
-          var keyPie = pie().startAngle(startAngle).endAngle(endAngle).padAngle(3 / outerRadius).value(function () {
-            return 1;
-          }).sort(null);
-
-          function makeKeys(numTones, octaves, raised) {
-            var tones = [];
-            for (i = 1; i <= numTones * octaves; i++) {
-              tones.push(i);
-            }
-            var isLowered = function isLowered(k) {
-              return !raised.includes(k % numTones);
-            };
-            var isRaised = function isRaised(k) {
-              return raised.includes(k % numTones);
-            };
-
-            var loweredKeys = keyPie(tones.filter(isLowered));
-            var keyWidth = (endAngle - startAngle) / loweredKeys.length;
-            var raisedKeys = [];
-
-            for (var i = 0, n = loweredKeys.length; i < n; i++) {
-              var k = loweredKeys[i];
-              if (isRaised(k.data + 1)) {
-                raisedKeys.splice(i, 0, {
-                  data: k.data + 1,
-                  startAngle: k.startAngle + keyWidth * (.5 + .15),
-                  endAngle: k.endAngle + keyWidth * (.5 - .15),
-                  padAngle: k.padAngle,
-                  sharp: true
-                });
-              }
-              k.sharp = false;
-            }
-            var keys = raisedKeys.concat(loweredKeys).sort(function (a, b) {
-              return a.data - b.data;
-            });
-            for (var i = 0, n = numTones * octaves; i < n; ++i) {
-              keys[i].frequency = 440 * Math.pow(2, (i - 9) / numTones); // 0 is middle C
-            }
-
-            return keys.sort(function (a, b) {
-              return a.sharp - b.sharp;
-            });
-          }
-
-          var keyArc = arc().cornerRadius(2)
+          var drawKeys = arc().cornerRadius(2)
           // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
           .innerRadius(function (d) {
-            return d.sharp ? innerRadius + elem.depth / (elem.overlapping + 2) : innerRadius;
+            return d.raised ? innerRadius + elem.depth / (elem.overlapping + 2) : innerRadius;
           }).outerRadius(function (d) {
-            return d.sharp ? outerRadius : outerRadius - elem.depth / (elem.overlapping + 2);
+            return d.raised ? outerRadius : outerRadius - elem.depth / (elem.overlapping + 2);
           });
 
           // DATA JOIN
-          // Join new data with old elements, if any.
-          var keys = makeKeys(this.notesInOctave, this.octaves, this.raisedKeys);
+          var keys = keyLayout().octaves(this.octaves).raisedPattern(this.raisedKeys).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave);
+
+          // let keys = layoutKeys(this.notesInOctave,this.octaves,this.raisedKeys,startAngle,endAngle,outerRadius);
           var keyboard = g.selectAll("path").data(keys);
 
           // EXIT
-          // Remove old elements as needed.
           keyboard.exit().on(over, null).remove();
 
           // UPDATE
-          // Update old elements as needed.
-          // text.attr("class", "update");
-
           var over = "ontouchstart" in window ? "touchstart" : "mouseover";
           var out = "ontouchstart" in window ? "touchend" : "mouseout";
 
           // ENTER
-          // Create new elements as needed.
           var context = this[audio];
           keyboard = keyboard.enter().append("path").merge(keyboard).attr("class", function (d) {
-            return "key key--" + (d.sharp ? "black" : "white");
-          }).attr("d", keyArc);
+            return "key key--" + (d.raised ? "black" : "white");
+          }).attr("d", drawKeys);
 
           keyboard.on(over, function (d, i) {
-            console.log("hey!!!!");
+            console.log(d, i, "hey!!!!");
             var now = context.currentTime,
                 oscillator = context.createOscillator(),
                 oscillator2 = context.createOscillator(),
@@ -13382,7 +13369,6 @@ var     HTMLElement$1 = root.HTMLElement;
             oscillator2.frequency.value = d.frequency;
             oscillator2.connect(gain);
             gain.gain.value = 0;
-            gain.gain.linearRampToValueAtTime(0, now);
             gain.gain.linearRampToValueAtTime(.1, now + .05);
             gain.gain.linearRampToValueAtTime(0, now + 0.5);
             filter.frequency.value = d.frequency;
@@ -13421,5 +13407,4 @@ var     HTMLElement$1 = root.HTMLElement;
       return _class;
     }(_class2));
 
-}));
-//# sourceMappingURL=all-around-keyboard.js.map
+}());

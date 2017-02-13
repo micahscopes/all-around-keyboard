@@ -1,6 +1,6 @@
 import 'skatejs-web-components';
 import { define, h, Component, prop } from 'skatejs';
-// import { makeKeys } from './keyboard.js'
+import { keyLayout } from './keyboard-layout.js'
 import { arc, pie } from 'd3-shape';
 import { select, selectAll, namespaces } from 'd3-selection';
 
@@ -109,84 +109,42 @@ customElements.define('all-around-keyboard', class extends Component {
         .select("g")
         .attr("transform", "translate(" + (this.width / 2) + "," + outerRadius + ")");
 
-    var keyPie = pie()
-        .startAngle(startAngle)
-        .endAngle(endAngle)
-        .padAngle(3/outerRadius)
-        .value(function() { return 1; })
-        .sort(null);
-
-    function makeKeys(numTones,octaves,raised) {
-        var tones = [];
-        for (i=1; i <= numTones*octaves; i++) {
-          tones.push(i);
-        }
-        var isLowered = (k) => !raised.includes(k%numTones)
-        var isRaised = (k) => raised.includes(k%numTones)
-
-        var loweredKeys = keyPie(tones.filter(isLowered));
-        var keyWidth = (endAngle - startAngle) / loweredKeys.length;
-        var raisedKeys = [];
-
-        for (var i = 0, n = loweredKeys.length; i < n; i++) {
-          var k = loweredKeys[i];
-          if (isRaised(k.data+1)) {
-            raisedKeys.splice(i, 0, {
-              data: k.data+1,
-              startAngle: k.startAngle + keyWidth * (.5 + .15),
-              endAngle: k.endAngle + keyWidth * (.5 - .15),
-              padAngle: k.padAngle,
-              sharp: true
-            });
-          }
-          k.sharp = false;
-        }
-        var keys = raisedKeys.concat(loweredKeys).sort((a,b) => a.data - b.data);
-        for (var i = 0, n = numTones*octaves; i < n; ++i) {
-          keys[i].frequency = 440 * Math.pow(2, (i - 9) / numTones); // 0 is middle C
-        }
-
-        return keys.sort(function(a, b) { return a.sharp - b.sharp; });
-    }
-
-    var keyArc = arc()
+    var drawKeys = arc()
         .cornerRadius(2)
         // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
         .innerRadius(function(d) {
-          return d.sharp ? innerRadius + elem.depth/(elem.overlapping+2): innerRadius;
+          return d.raised ? innerRadius + elem.depth/(elem.overlapping+2): innerRadius;
         })
         .outerRadius(function(d) {
-          return d.sharp ? outerRadius : outerRadius - elem.depth/(elem.overlapping+2);
+          return d.raised ? outerRadius : outerRadius - elem.depth/(elem.overlapping+2);
         });
 
-
     // DATA JOIN
-    // Join new data with old elements, if any.
-    let keys = makeKeys(this.notesInOctave,this.octaves,this.raisedKeys);
+    let keys = keyLayout()
+              .octaves(this.octaves)
+              .raisedPattern(this.raisedKeys)
+              .startAngle(startAngle)
+              .endAngle(endAngle)
+              .octaveSize(this.notesInOctave)
+
+    // let keys = layoutKeys(this.notesInOctave,this.octaves,this.raisedKeys,startAngle,endAngle,outerRadius);
     let keyboard = g.selectAll("path").data(keys);
 
     // EXIT
-    // Remove old elements as needed.
     keyboard.exit().on(over,null).remove();
 
     // UPDATE
-    // Update old elements as needed.
-    // text.attr("class", "update");
-
     var over = ("ontouchstart" in window) ? "touchstart" : "mouseover";
     var out = ("ontouchstart" in window) ? "touchend" : "mouseout";
 
-
     // ENTER
-    // Create new elements as needed.
     var context = this[audio];
     keyboard = keyboard.enter().append("path").merge(keyboard)
-      .attr("class", function(d) { return "key key--" + (d.sharp ? "black" : "white"); })
-      .attr("d", keyArc);
-
+      .attr("class", function(d) { return "key key--" + (d.raised ? "black" : "white"); })
+      .attr("d", drawKeys);
 
     keyboard.on(over, function(d, i) {
-      console.log("hey!!!!");
+      console.log(d,i,"hey!!!!");
       var now = context.currentTime,
           oscillator = context.createOscillator(),
           oscillator2 = context.createOscillator(),
@@ -198,7 +156,6 @@ customElements.define('all-around-keyboard', class extends Component {
       oscillator2.frequency.value = d.frequency;
       oscillator2.connect(gain);
       gain.gain.value = 0;
-      gain.gain.linearRampToValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(.1, now + .05);
       gain.gain.linearRampToValueAtTime(0, now + 0.5);
       filter.frequency.value = d.frequency;
