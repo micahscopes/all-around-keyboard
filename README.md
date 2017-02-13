@@ -13,12 +13,16 @@ a web component for round pianos
 </all-around-keyboard>
 ```
 
-#### todo:
-- midi and events
-- synthesis options
+#### dreams and schemes:
+- midi events
+- note and x/y events
+- multitouch support
+- synthesis
   1. enable/disable
   2. gain
-- style options
-- state (?)
+  3. integrate with [this badass dx7 emulator](https://github.com/mmontag/dx7-synth-js)
+- more styles
+- fix bugs
+- and so much more (?)
 
 #### *inspired by mbostock's example for d3: https://bl.ocks.org/mbostock/5723d93e4f617b542991*
