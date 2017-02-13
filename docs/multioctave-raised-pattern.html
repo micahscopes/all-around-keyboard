@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<ul>
+
+<all-around-keyboard  notes-in-octave="12"
+                      raised-keys="[2,4,7,9,11,14,16,18,21,23,25,28,30,32,35,37]"
+                      sweep=45 octaves="3"
+                      depth="220" width="500"
+                      overlapping="0.75">
+</all-around-keyboard>
+<li>modulate into the key of G Maj for the second octave, and so on</li>
+
+</ul>
+
+<script src="all-around-keyboard.js"></script>
+
+
+<style>
+  body {
+    margin: 0 50px;
+    background: aquamarine;
+    font-family: sans;
+    color: #4466bb;
+    text-align: center;
+  }
+
+  ul {
+      list-style: none;
+      padding: 0px;
+  }
+  li { padding: 10px; }
+  li:before
+  {
+      list-style: none;
+      content: '\266B';
+      margin: 0 1em;    /* any design */
+  }
+
+  all-around-keyboard {
+    margin: 50px;
+    margin-top: 50px;
+    margin-bottom: 0px;
+    display: inline-block;
+    border: solid #4466bb 1px;
+    padding: 40px;
+  }
+</style>
