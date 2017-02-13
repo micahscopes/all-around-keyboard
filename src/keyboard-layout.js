@@ -73,7 +73,7 @@ export const keyLayout = function(){
 
   //  let octaves = 1;
   keyLayout.octaves = function(_) {
-    if (typeof _ === "number") { raisedPattern = _ }
+    if (typeof _ === "number") { octaves = _ }
     return keyLayout;
   };
 

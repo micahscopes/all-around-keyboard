@@ -12379,7 +12379,7 @@ var     HTMLElement$1 = root.HTMLElement;
       //  let octaves = 1;
       keyLayout.octaves = function (_) {
         if (typeof _ === "number") {
-          raisedPattern = _;
+          octaves = _;
         }
         return keyLayout;
       };

@@ -1,5 +1,8 @@
-(function () {
-    'use strict';
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    (factory());
+}(this, function () { 'use strict';
 
     var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {}
 
@@ -12379,7 +12382,7 @@ var     HTMLElement$1 = root.HTMLElement;
       //  let octaves = 1;
       keyLayout.octaves = function (_) {
         if (typeof _ === "number") {
-          raisedPattern = _;
+          octaves = _;
         }
         return keyLayout;
       };
@@ -13407,4 +13410,5 @@ var     HTMLElement$1 = root.HTMLElement;
       return _class;
     }(_class2));
 
-}());
+}));
+//# sourceMappingURL=all-around-keyboard.js.map
