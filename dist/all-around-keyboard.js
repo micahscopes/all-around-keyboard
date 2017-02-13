@@ -11283,6 +11283,136 @@ var     HTMLElement$1 = root.HTMLElement;
 
     var h = builder();
 
+    var Pentatonic = [2, 4, 7, 9, 11];
+
+    function constant(x) {
+      return function constant() {
+        return x;
+      };
+    }
+
+    var keyLayout = function keyLayout() {
+      var octaves = 1;
+      var octaveSize = 12;
+      var raisedPattern = Pentatonic;
+      var isRaised = void 0;
+      var startAngle = constant(-Math.PI);
+      var endAngle = constant(Math.PI);
+      var frequency = void 0;
+      //
+      function keyLayout(tones) {
+        if (!tones) {
+          for (var i = 0, tones = []; i < octaveSize; i++) {
+            tones.push(i + 1);
+          }
+        }
+        if (!isRaised) {
+          isRaised = function isRaised(k) {
+            return raisedPattern.includes(k);
+          };
+        }
+        if (!frequency) {
+          frequency = function frequency(k) {
+            return 440 * Math.pow(2, (k - 9) / tones.length);
+          };
+        }
+
+        var raisedPatternOctaves = Math.ceil(Math.max.apply(Math, raisedPattern) / tones.length);
+        var allKeys = [],
+            raisedKeys = [],
+            lowerKeys = [];
+        var lowerCount = 0;
+        var k = void 0,
+            l = void 0;
+        for (k = 0; k < tones.length * octaves; k++) {
+          if (!isRaised((k + 1) % (raisedPatternOctaves * tones.length))) {
+            lowerCount++;
+          }
+        }
+
+        for (k = 0, l = 0; k < tones.length * octaves; k++) {
+          var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
+          var key = { data: tones[k % tones.length], index: k + 1 };
+          key.frequency = frequency(key.index);
+          if (isRaised(key.index % (raisedPatternOctaves * tones.length))) {
+            key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
+            key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
+            key.raised = true;
+            raisedKeys.push(key);
+          } else {
+            key.startAngle = startAngle(k) + l * diffAngle;
+            key.endAngle = key.startAngle + diffAngle;
+            key.raised = false;
+            lowerKeys.push(key);
+            l++;
+          }
+        }
+        return lowerKeys.concat(raisedKeys);
+      }
+
+      // for (var i = 0, n = numTones*octaves; i < n; ++i) {
+      //   keys[i].frequency = 440 * Math.pow(2, (i - 9) / numTones); // 0 is middle C
+      // }
+
+
+      //  let isRaised = k => raisedPattern.includes(k);
+      keyLayout.isRaised = function (_) {
+        if (arguments.length) {
+          isRaised = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let raisedPattern = Pentatonic;
+      keyLayout.raisedPattern = function (_) {
+        if (_ && _.length) {
+          raisedPattern = _;
+        }
+        return keyLayout;
+      };
+
+      //  let octaves = 1;
+      keyLayout.octaves = function (_) {
+        if (typeof _ === "number") {
+          octaves = _;
+        }
+        return keyLayout;
+      };
+
+      // let startAngle = constant(-Math.PI);
+      keyLayout.startAngle = function (_) {
+        if (arguments.length) {
+          startAngle = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let frequency;
+      keyLayout.frequency = function (_) {
+        if (arguments.length) {
+          frequency = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let endAngle = constant(Math.PI);
+      keyLayout.endAngle = function (_) {
+        if (arguments.length) {
+          endAngle = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      keyLayout.octaveSize = function (_) {
+        if (typeof _ === "number") {
+          octaveSize = _;
+        }
+        return keyLayout;
+      };
+
+      return keyLayout;
+    };
+
     var pi = Math.PI;
     var tau = 2 * pi;
     var epsilon = 1e-6;
@@ -12294,131 +12424,6 @@ var     HTMLElement$1 = root.HTMLElement;
       bezierCurveTo: function bezierCurveTo(x1, y1, x2, y2, x, y) {
         this._context.bezierCurveTo(y1, x1, y2, x2, y, x);
       }
-    };
-
-    var Pentatonic = [2, 4, 7, 9, 11];
-
-    function constant(x) {
-      return function constant() {
-        return x;
-      };
-    }
-
-    var keyLayout = function keyLayout() {
-      var octaves = 1;
-      var octaveSize = 12;
-      var raisedPattern = Pentatonic;
-      var isRaised = void 0;
-      var startAngle = constant(-Math.PI);
-      var endAngle = constant(Math.PI);
-      var frequency = void 0;
-      //
-      function keyLayout(tones) {
-        if (!tones) {
-          for (var i = 0, tones = []; i < octaveSize; i++) {
-            tones.push(i + 1);
-          }
-        }
-        if (!isRaised) {
-          isRaised = function isRaised(k) {
-            return raisedPattern.includes(k);
-          };
-        }
-        if (!frequency) {
-          frequency = function frequency(k) {
-            return 440 * Math.pow(2, (k - 9) / tones.length);
-          };
-        }
-
-        var raisedPatternOctaves = Math.ceil(Math.max.apply(Math, raisedPattern) / tones.length);
-        var allKeys = [],
-            raisedKeys = [],
-            lowerKeys = [];
-        var lowerCount = octaves * tones.length - octaves * (raisedPattern.length / raisedPatternOctaves);
-
-        var k = void 0,
-            l = void 0;
-        for (k = 0, l = 0; k < tones.length * octaves; k++) {
-          var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
-          var key = { data: tones[k % tones.length], index: k + 1 };
-          key.frequency = frequency(key.index);
-          if (isRaised(key.index % (raisedPatternOctaves * tones.length))) {
-            key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
-            key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
-            key.raised = true;
-            raisedKeys.push(key);
-          } else {
-            key.startAngle = startAngle(k) + l * diffAngle;
-            key.endAngle = key.startAngle + diffAngle;
-            key.raised = false;
-            lowerKeys.push(key);
-            l++;
-          }
-        }
-        return lowerKeys.concat(raisedKeys);
-      }
-
-      // for (var i = 0, n = numTones*octaves; i < n; ++i) {
-      //   keys[i].frequency = 440 * Math.pow(2, (i - 9) / numTones); // 0 is middle C
-      // }
-
-
-      //  let isRaised = k => raisedPattern.includes(k);
-      keyLayout.isRaised = function (_) {
-        if (arguments.length) {
-          isRaised = typeof _ === "function" ? _ : constant(_);
-        }
-        return keyLayout;
-      };
-
-      // let raisedPattern = Pentatonic;
-      keyLayout.raisedPattern = function (_) {
-        if (_ && _.length) {
-          raisedPattern = _;
-        }
-        return keyLayout;
-      };
-
-      //  let octaves = 1;
-      keyLayout.octaves = function (_) {
-        if (typeof _ === "number") {
-          octaves = _;
-        }
-        return keyLayout;
-      };
-
-      // let startAngle = constant(-Math.PI);
-      keyLayout.startAngle = function (_) {
-        if (arguments.length) {
-          startAngle = typeof _ === "function" ? _ : constant(_);
-        }
-        return keyLayout;
-      };
-
-      // let frequency;
-      keyLayout.frequency = function (_) {
-        if (arguments.length) {
-          frequency = typeof _ === "function" ? _ : constant(_);
-        }
-        return keyLayout;
-      };
-
-      // let endAngle = constant(Math.PI);
-      keyLayout.endAngle = function (_) {
-        if (arguments.length) {
-          endAngle = typeof _ === "function" ? _ : constant(_);
-        }
-        return keyLayout;
-      };
-
-      keyLayout.octaveSize = function (_) {
-        if (typeof _ === "number") {
-          octaveSize = _;
-        }
-        return keyLayout;
-      };
-
-      return keyLayout;
     };
 
     var xhtml = "http://www.w3.org/1999/xhtml";

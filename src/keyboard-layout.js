@@ -1,7 +1,5 @@
-import { pie } from 'd3-shape';
 const TwelveTones = [1,2,3,4,5,6,7,8,9,10,11,12];
 const Pentatonic = [2,4,7,9,11];
-
 
 function constant(x) {
   return function constant() {
@@ -31,9 +29,12 @@ export const keyLayout = function(){
 
     let raisedPatternOctaves = Math.ceil(Math.max.apply(Math,raisedPattern)/tones.length);
     let allKeys = [], raisedKeys = [], lowerKeys = [];
-    let lowerCount = octaves*tones.length - octaves*(raisedPattern.length/raisedPatternOctaves);
-
+    let lowerCount = 0;
     let k,l;
+    for(k=0; k<tones.length*octaves; k++){
+      if(!isRaised((k+1)%(raisedPatternOctaves*tones.length))) {lowerCount++;}
+    }
+
     for(k = 0, l = 0; k < tones.length*octaves; k++) {
       let diffAngle = (endAngle(k)-startAngle(k))/lowerCount;
       let key = { data: tones[k%tones.length], index: k+1 }
