@@ -1,8 +1,8 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
-    (factory());
-}(this, function () { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+    (factory((global.all-around-keyboard = global.all-around-keyboard || {})));
+}(this, function (exports) { 'use strict';
 
     var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {}
 
@@ -13269,7 +13269,7 @@ var     HTMLElement$1 = root.HTMLElement;
 
     var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--white { fill: #fff; stroke: #777; }\n.key--black { fill: #333; stroke: #000; }\n.key--white:hover { fill: yellow; stroke: #00999b; }\n.key--black:hover { fill: yellow; stroke: #910099; }\n';
 
-    customElements.define('all-around-keyboard', function (_Component) {
+    var KeyboardElement = customElements.define('all-around-keyboard', function (_Component) {
       inherits(_class, _Component);
 
       function _class() {
@@ -13414,6 +13414,11 @@ var     HTMLElement$1 = root.HTMLElement;
       }]);
       return _class;
     }(_class2));
+
+    exports.KeyboardElement = KeyboardElement;
+    exports.keyLayout = keyLayout;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
 //# sourceMappingURL=all-around-keyboard.js.map

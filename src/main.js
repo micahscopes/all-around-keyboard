@@ -1,6 +1,6 @@
 import 'skatejs-web-components';
 import { define, h, Component, prop } from 'skatejs';
-import { keyLayout } from './keyboard-layout.js'
+import { keyLayout } from './key-layout.js'
 import { arc, pie } from 'd3-shape';
 import { select, selectAll, namespaces } from 'd3-selection';
 
@@ -26,7 +26,7 @@ all-around-keyboard {
 .key--black:hover { fill: yellow; stroke: #910099; }
 `
 
-customElements.define('all-around-keyboard', class extends Component {
+const KeyboardElement = customElements.define('all-around-keyboard', class extends Component {
   static get props () {
     return {
       // By declaring the property an attribute, we can now pass an initial value
@@ -168,3 +168,5 @@ customElements.define('all-around-keyboard', class extends Component {
 
   }
 });
+
+export { KeyboardElement, keyLayout };
