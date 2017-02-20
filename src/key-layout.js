@@ -37,7 +37,7 @@ export const keyLayout = function(){
 
     for(k = 0, l = 0; k < tones.length*octaves; k++) {
       let diffAngle = (endAngle(k)-startAngle(k))/lowerCount;
-      let key = { data: tones[k%tones.length], index: k+1 }
+      let key = { note: tones[k%tones.length], index: k+1 }
       key.frequency = frequency(key.index)
       if(isRaised(key.index%(raisedPatternOctaves*tones.length))) {
         key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);

@@ -10,6 +10,7 @@ export default {
   },
   dest: 'dist/all-around-keyboard.js',
   format: 'iife',
+  moduleName: "window",
   // sourceMap: 'inline',
   plugins: [
     resolve({

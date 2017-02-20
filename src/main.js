@@ -7,6 +7,11 @@ import { select, selectAll, namespaces } from 'd3-selection';
 const audio = Symbol();
 const shadowSVG = Symbol();
 
+const KEYPRESS = 'keypress';
+const KEYRELEASE = 'keyrelease'
+var keyNoteClass = (n) => 'key--note-'+n;
+var keyIndexClass = (n) => 'key--index-'+n;
+
 const css = `
 all-around-keyboard {
   display: block;
@@ -20,10 +25,9 @@ all-around-keyboard {
   stroke-width: 1.5px;
 }
 
-.key--white { fill: #fff; stroke: #777; }
-.key--black { fill: #333; stroke: #000; }
-.key--white:hover { fill: yellow; stroke: #00999b; }
-.key--black:hover { fill: yellow; stroke: #910099; }
+.key--lower { fill: #fff; stroke: #777; }
+.key--upper { fill: #333; stroke: #000; }
+.key--pressed { fill: yellow; stroke: #00999b; }
 `
 
 const KeyboardElement = customElements.define('all-around-keyboard', class extends Component {
@@ -131,7 +135,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     let keyboard = g.selectAll("path").data(keys);
 
     // EXIT
-    keyboard.exit().on(over,null).remove();
+    keyboard.exit().on(KEYPRESS,null).remove();
 
     // UPDATE
     var over = ("ontouchstart" in window) ? "touchstart" : "mouseover";
@@ -140,12 +144,36 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     // ENTER
     var context = this[audio];
     keyboard = keyboard.enter().append("path").merge(keyboard)
-      .attr("class", function(d) { return "key key--" + (d.raised ? "black" : "white"); })
+      .attr("class", function(d) {
+        return "key key--" + (d.raised ? "upper" : "lower")
+        + " " + keyNoteClass(d.note)
+        + " " + keyIndexClass(d.index);
+      })
       .attr("d", drawKeys);
 
-    keyboard.on(over, function(d, i) {
-      console.log(d,i,"hey!!!!");
-      var now = context.currentTime,
+    this.addEventListener(KEYPRESS,function(e){
+      keyboard.filter("."+keyIndexClass(e.index))
+      .classed("key--pressed",true)
+      .dispatch(KEYPRESS);
+    })
+
+    this.addEventListener(KEYRELEASE,function(e){
+      keyboard.filter("."+keyIndexClass(e.index)).classed("key--pressed",false)
+      .dispatch(KEYRELEASE);
+    })
+
+
+    keyboard
+      .on(over, (d) => {
+        var e = new Event(KEYPRESS); e.index = d.index;
+        this.dispatchEvent(e)})
+      .on(out, (d) => {
+        var e = new Event(KEYRELEASE); e.index = d.index;
+        this.dispatchEvent(e)})
+
+    keyboard.on(KEYPRESS, function(d, i) {
+      // console.log(d,i,"hey!!!!");
+      let now = context.currentTime,
           oscillator = context.createOscillator(),
           oscillator2 = context.createOscillator(),
           filter = context.createBiquadFilter(),
@@ -157,14 +185,24 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       oscillator2.connect(gain);
       gain.gain.value = 0;
       gain.gain.linearRampToValueAtTime(.1, now + .05);
-      gain.gain.linearRampToValueAtTime(0, now + 0.5);
+      gain.gain.linearRampToValueAtTime(0.005, now + 5);
+      this.gain = gain;
       filter.frequency.value = d.frequency;
       filter.type = "bandpass";
       filter.connect(gain);
       gain.connect(context.destination);
       oscillator.start(0);
-      setTimeout(function() { oscillator.stop(); }, 4000);
+      this.oscillator = oscillator;
+      setTimeout(function() { oscillator.stop(); }, 10000);
     });
+
+    keyboard.on(KEYRELEASE, function(d, i) {
+      let now = context.currentTime;
+      let oscillator = this.oscillator;
+      this.gain.gain.linearRampToValueAtTime(0, now + 0.2);
+      setTimeout(function() { oscillator.stop(); }, 500);
+    });
+
 
   }
 });

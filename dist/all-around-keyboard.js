@@ -1,8 +1,5 @@
-(function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-    typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (factory((global.all-around-keyboard = global.all-around-keyboard || {})));
-}(this, function (exports) { 'use strict';
+(function (exports) {
+    'use strict';
 
     var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {}
 
@@ -11332,7 +11329,7 @@ var     HTMLElement$1 = root.HTMLElement;
 
         for (k = 0, l = 0; k < tones.length * octaves; k++) {
           var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
-          var key = { data: tones[k % tones.length], index: k + 1 };
+          var key = { note: tones[k % tones.length], index: k + 1 };
           key.frequency = frequency(key.index);
           if (isRaised(key.index % (raisedPatternOctaves * tones.length))) {
             key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
@@ -13267,7 +13264,16 @@ var     HTMLElement$1 = root.HTMLElement;
     var audio = Symbol();
     var shadowSVG = Symbol();
 
-    var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--white { fill: #fff; stroke: #777; }\n.key--black { fill: #333; stroke: #000; }\n.key--white:hover { fill: yellow; stroke: #00999b; }\n.key--black:hover { fill: yellow; stroke: #910099; }\n';
+    var KEYPRESS = 'keypress';
+    var KEYRELEASE = 'keyrelease';
+    var keyNoteClass = function keyNoteClass(n) {
+      return 'key--note-' + n;
+    };
+    var keyIndexClass = function keyIndexClass(n) {
+      return 'key--index-' + n;
+    };
+
+    var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n.key--pressed { fill: yellow; stroke: #00999b; }\n';
 
     var KeyboardElement = customElements.define('all-around-keyboard', function (_Component) {
       inherits(_class, _Component);
@@ -13317,6 +13323,8 @@ var     HTMLElement$1 = root.HTMLElement;
       }, {
         key: 'renderedCallback',
         value: function renderedCallback() {
+          var _this2 = this;
+
           var elem = this;
           this.shadowRoot.children[0].appendChild(this[shadowSVG]);
 
@@ -13352,7 +13360,7 @@ var     HTMLElement$1 = root.HTMLElement;
           var keyboard = g.selectAll("path").data(keys);
 
           // EXIT
-          keyboard.exit().on(over, null).remove();
+          keyboard.exit().on(KEYPRESS, null).remove();
 
           // UPDATE
           var over = "ontouchstart" in window ? "touchstart" : "mouseover";
@@ -13361,11 +13369,27 @@ var     HTMLElement$1 = root.HTMLElement;
           // ENTER
           var context = this[audio];
           keyboard = keyboard.enter().append("path").merge(keyboard).attr("class", function (d) {
-            return "key key--" + (d.raised ? "black" : "white");
+            return "key key--" + (d.raised ? "upper" : "lower") + " " + keyNoteClass(d.note) + " " + keyIndexClass(d.index);
           }).attr("d", drawKeys);
 
-          keyboard.on(over, function (d, i) {
-            console.log(d, i, "hey!!!!");
+          this.addEventListener(KEYPRESS, function (e) {
+            keyboard.filter("." + keyIndexClass(e.index)).classed("key--pressed", true).dispatch(KEYPRESS);
+          });
+
+          this.addEventListener(KEYRELEASE, function (e) {
+            keyboard.filter("." + keyIndexClass(e.index)).classed("key--pressed", false).dispatch(KEYRELEASE);
+          });
+
+          keyboard.on(over, function (d) {
+            var e = new Event(KEYPRESS);e.index = d.index;
+            _this2.dispatchEvent(e);
+          }).on(out, function (d) {
+            var e = new Event(KEYRELEASE);e.index = d.index;
+            _this2.dispatchEvent(e);
+          });
+
+          keyboard.on(KEYPRESS, function (d, i) {
+            // console.log(d,i,"hey!!!!");
             var now = context.currentTime,
                 oscillator = context.createOscillator(),
                 oscillator2 = context.createOscillator(),
@@ -13378,15 +13402,26 @@ var     HTMLElement$1 = root.HTMLElement;
             oscillator2.connect(gain);
             gain.gain.value = 0;
             gain.gain.linearRampToValueAtTime(.1, now + .05);
-            gain.gain.linearRampToValueAtTime(0, now + 0.5);
+            gain.gain.linearRampToValueAtTime(0.005, now + 6);
+            this.gain = gain;
             filter.frequency.value = d.frequency;
             filter.type = "bandpass";
             filter.connect(gain);
             gain.connect(context.destination);
             oscillator.start(0);
+            this.oscillator = oscillator;
             setTimeout(function () {
               oscillator.stop();
-            }, 4000);
+            }, 10000);
+          });
+
+          keyboard.on(KEYRELEASE, function (d, i) {
+            var now = context.currentTime;
+            var oscillator = this.oscillator;
+            this.gain.gain.linearRampToValueAtTime(0, now + 0.2);
+            setTimeout(function () {
+              oscillator.stop();
+            }, 500);
           });
         }
       }], [{
@@ -13418,7 +13453,4 @@ var     HTMLElement$1 = root.HTMLElement;
     exports.KeyboardElement = KeyboardElement;
     exports.keyLayout = keyLayout;
 
-    Object.defineProperty(exports, '__esModule', { value: true });
-
-}));
-//# sourceMappingURL=all-around-keyboard.js.map
+}((this.window = this.window || {})));
