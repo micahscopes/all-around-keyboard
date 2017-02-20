@@ -16,30 +16,30 @@ export const keyLayout = function(){
   let endAngle = constant(Math.PI);
   let frequency;
   //
-  function keyLayout(tones) {
-    if (!tones) {
-      for (var i = 0, tones = []; i<octaveSize; i++) {tones.push(i+1)}
+  function keyLayout(notes) {
+    if (!notes) {
+      for (var i = 0, notes = []; i<octaveSize; i++) {notes.push(i+1)}
     }
     if (!isRaised){
       isRaised = k => raisedPattern.includes(k);
     }
     if (!frequency) {
-      frequency = (k) => 440 * Math.pow(2, (k - 9) / tones.length)
+      frequency = (k) => 440 * Math.pow(2, (k - 9) / notes.length)
     }
 
-    let raisedPatternOctaves = Math.ceil(Math.max.apply(Math,raisedPattern)/tones.length);
+    let raisedPatternOctaves = Math.ceil(Math.max.apply(Math,raisedPattern)/notes.length);
     let allKeys = [], raisedKeys = [], lowerKeys = [];
     let lowerCount = 0;
     let k,l;
-    for(k=0; k<tones.length*octaves; k++){
-      if(!isRaised((k+1)%(raisedPatternOctaves*tones.length))) {lowerCount++;}
+    for(k=0; k<notes.length*octaves; k++){
+      if(!isRaised((k+1)%(raisedPatternOctaves*notes.length))) {lowerCount++;}
     }
 
-    for(k = 0, l = 0; k < tones.length*octaves; k++) {
+    for(k = 0, l = 0; k < notes.length*octaves; k++) {
       let diffAngle = (endAngle(k)-startAngle(k))/lowerCount;
-      let key = { note: tones[k%tones.length], index: k+1 }
+      let key = { note: notes[k%notes.length], index: k+1 }
       key.frequency = frequency(key.index)
-      if(isRaised(key.index%(raisedPatternOctaves*tones.length))) {
+      if(isRaised(key.index%(raisedPatternOctaves*notes.length))) {
         key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
         key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
         key.raised = true;

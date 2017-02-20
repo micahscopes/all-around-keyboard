@@ -8,7 +8,14 @@ const audio = Symbol();
 const shadowSVG = Symbol();
 
 const KEYPRESS = 'keypress';
-const KEYRELEASE = 'keyrelease'
+const KEYRELEASE = 'keyrelease';
+
+const KEYLIGHT = 'keylight';
+const KEYDIM = 'keydim';
+
+const NOTELIGHT = 'notelight';
+const NOTEDIM = 'notedim';
+
 var keyNoteClass = (n) => 'key--note-'+n;
 var keyIndexClass = (n) => 'key--index-'+n;
 
@@ -27,7 +34,19 @@ all-around-keyboard {
 
 .key--lower { fill: #fff; stroke: #777; }
 .key--upper { fill: #333; stroke: #000; }
-.key--pressed { fill: yellow; stroke: #00999b; }
+
+.key--pressed,
+.key--highlight.key--pressed.key--upper,
+.key--highlight.key--pressed.key--lower
+  { fill: yellow; }
+
+.key--highlight {
+    stroke: #0095ff;
+    stroke-width: 5px;
+}
+
+.key--highlight.key--lower { fill: #eee }
+.key--highlight.key--upper { fill: #444 }
 `
 
 const KeyboardElement = customElements.define('all-around-keyboard', class extends Component {
@@ -36,7 +55,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       // By declaring the property an attribute, we can now pass an initial value
       // for the count as part of the HTML.
       notesInOctave: prop.number({ attribute: true, default: 12 }),
-      raisedKeys: prop.array  ({ attribute: true, default: [1,3,6,8,10] }),
+      raisedNotes: prop.array  ({ attribute: true, default: [2,4,7,9,11] }),
       octaves: prop.number({ attribute: true, default: 2 }),
       sweep: prop.number({ attribute: true, default: 90,
         deserialize (val) {
@@ -126,12 +145,11 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     // DATA JOIN
     let keys = keyLayout()
               .octaves(this.octaves)
-              .raisedPattern(this.raisedKeys)
+              .raisedPattern(this.raisedNotes)
               .startAngle(startAngle)
               .endAngle(endAngle)
               .octaveSize(this.notesInOctave)
 
-    // let keys = layoutKeys(this.notesInOctave,this.octaves,this.raisedKeys,startAngle,endAngle,outerRadius);
     let keyboard = g.selectAll("path").data(keys);
 
     // EXIT
@@ -145,23 +163,44 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     var context = this[audio];
     keyboard = keyboard.enter().append("path").merge(keyboard)
       .attr("class", function(d) {
-        return "key key--" + (d.raised ? "upper" : "lower")
-        + " " + keyNoteClass(d.note)
-        + " " + keyIndexClass(d.index);
+        return "key key--" + (d.raised ? "upper" : "lower");
+        // + " " + keyNoteClass(d.note)
+        // + " " + keyIndexClass(d.index);
       })
       .attr("d", drawKeys);
 
     this.addEventListener(KEYPRESS,function(e){
-      keyboard.filter("."+keyIndexClass(e.index))
+      keyboard.filter((d)=>d.index == e.index)
       .classed("key--pressed",true)
       .dispatch(KEYPRESS);
     })
 
     this.addEventListener(KEYRELEASE,function(e){
-      keyboard.filter("."+keyIndexClass(e.index)).classed("key--pressed",false)
+      keyboard.filter((d)=>d.index == e.index).classed("key--pressed",false)
       .dispatch(KEYRELEASE);
     })
 
+    this.addEventListener(KEYLIGHT,function(e){
+      keyboard.filter((d)=>d.index == e.index)
+      .classed("key--highlight",true)
+      .dispatch(KEYLIGHT);
+    })
+
+    this.addEventListener(KEYDIM,function(e){
+      keyboard.filter((d)=>d.index == e.index).classed("key--highlight",false)
+      .dispatch(KEYDIM);
+    })
+
+    this.addEventListener(NOTELIGHT,function(e){
+      keyboard.filter((d)=>d.note == e.note)
+      .classed("key--highlight",true)
+      .dispatch(NOTELIGHT);
+    })
+
+    this.addEventListener(NOTEDIM,function(e){
+      keyboard.filter((d)=>d.note == e.note).classed("key--highlight",false)
+      .dispatch(NOTEDIM);
+    })
 
     keyboard
       .on(over, (d) => {

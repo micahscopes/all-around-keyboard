@@ -11297,10 +11297,10 @@ var     HTMLElement$1 = root.HTMLElement;
       var endAngle = constant(Math.PI);
       var frequency = void 0;
       //
-      function keyLayout(tones) {
-        if (!tones) {
-          for (var i = 0, tones = []; i < octaveSize; i++) {
-            tones.push(i + 1);
+      function keyLayout(notes) {
+        if (!notes) {
+          for (var i = 0, notes = []; i < octaveSize; i++) {
+            notes.push(i + 1);
           }
         }
         if (!isRaised) {
@@ -11310,28 +11310,28 @@ var     HTMLElement$1 = root.HTMLElement;
         }
         if (!frequency) {
           frequency = function frequency(k) {
-            return 440 * Math.pow(2, (k - 9) / tones.length);
+            return 440 * Math.pow(2, (k - 9) / notes.length);
           };
         }
 
-        var raisedPatternOctaves = Math.ceil(Math.max.apply(Math, raisedPattern) / tones.length);
+        var raisedPatternOctaves = Math.ceil(Math.max.apply(Math, raisedPattern) / notes.length);
         var allKeys = [],
             raisedKeys = [],
             lowerKeys = [];
         var lowerCount = 0;
         var k = void 0,
             l = void 0;
-        for (k = 0; k < tones.length * octaves; k++) {
-          if (!isRaised((k + 1) % (raisedPatternOctaves * tones.length))) {
+        for (k = 0; k < notes.length * octaves; k++) {
+          if (!isRaised((k + 1) % (raisedPatternOctaves * notes.length))) {
             lowerCount++;
           }
         }
 
-        for (k = 0, l = 0; k < tones.length * octaves; k++) {
+        for (k = 0, l = 0; k < notes.length * octaves; k++) {
           var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
-          var key = { note: tones[k % tones.length], index: k + 1 };
+          var key = { note: notes[k % notes.length], index: k + 1 };
           key.frequency = frequency(key.index);
-          if (isRaised(key.index % (raisedPatternOctaves * tones.length))) {
+          if (isRaised(key.index % (raisedPatternOctaves * notes.length))) {
             key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
             key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
             key.raised = true;
@@ -13266,14 +13266,14 @@ var     HTMLElement$1 = root.HTMLElement;
 
     var KEYPRESS = 'keypress';
     var KEYRELEASE = 'keyrelease';
-    var keyNoteClass = function keyNoteClass(n) {
-      return 'key--note-' + n;
-    };
-    var keyIndexClass = function keyIndexClass(n) {
-      return 'key--index-' + n;
-    };
 
-    var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n.key--pressed { fill: yellow; stroke: #00999b; }\n';
+    var KEYLIGHT = 'keylight';
+    var KEYDIM = 'keydim';
+
+    var NOTELIGHT = 'notelight';
+    var NOTEDIM = 'notedim';
+
+    var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: yellow; }\n\n.key--highlight {\n    stroke: #0095ff;\n    stroke-width: 5px;\n}\n\n.key--highlight.key--lower { fill: #eee }\n.key--highlight.key--upper { fill: #444 }\n';
 
     var KeyboardElement = customElements.define('all-around-keyboard', function (_Component) {
       inherits(_class, _Component);
@@ -13354,9 +13354,8 @@ var     HTMLElement$1 = root.HTMLElement;
           });
 
           // DATA JOIN
-          var keys = keyLayout().octaves(this.octaves).raisedPattern(this.raisedKeys).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave);
+          var keys = keyLayout().octaves(this.octaves).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave);
 
-          // let keys = layoutKeys(this.notesInOctave,this.octaves,this.raisedKeys,startAngle,endAngle,outerRadius);
           var keyboard = g.selectAll("path").data(keys);
 
           // EXIT
@@ -13369,15 +13368,45 @@ var     HTMLElement$1 = root.HTMLElement;
           // ENTER
           var context = this[audio];
           keyboard = keyboard.enter().append("path").merge(keyboard).attr("class", function (d) {
-            return "key key--" + (d.raised ? "upper" : "lower") + " " + keyNoteClass(d.note) + " " + keyIndexClass(d.index);
+            return "key key--" + (d.raised ? "upper" : "lower");
+            // + " " + keyNoteClass(d.note)
+            // + " " + keyIndexClass(d.index);
           }).attr("d", drawKeys);
 
           this.addEventListener(KEYPRESS, function (e) {
-            keyboard.filter("." + keyIndexClass(e.index)).classed("key--pressed", true).dispatch(KEYPRESS);
+            keyboard.filter(function (d) {
+              return d.index == e.index;
+            }).classed("key--pressed", true).dispatch(KEYPRESS);
           });
 
           this.addEventListener(KEYRELEASE, function (e) {
-            keyboard.filter("." + keyIndexClass(e.index)).classed("key--pressed", false).dispatch(KEYRELEASE);
+            keyboard.filter(function (d) {
+              return d.index == e.index;
+            }).classed("key--pressed", false).dispatch(KEYRELEASE);
+          });
+
+          this.addEventListener(KEYLIGHT, function (e) {
+            keyboard.filter(function (d) {
+              return d.index == e.index;
+            }).classed("key--highlight", true).dispatch(KEYLIGHT);
+          });
+
+          this.addEventListener(KEYDIM, function (e) {
+            keyboard.filter(function (d) {
+              return d.index == e.index;
+            }).classed("key--highlight", false).dispatch(KEYDIM);
+          });
+
+          this.addEventListener(NOTELIGHT, function (e) {
+            keyboard.filter(function (d) {
+              return d.note == e.note;
+            }).classed("key--highlight", true).dispatch(NOTELIGHT);
+          });
+
+          this.addEventListener(NOTEDIM, function (e) {
+            keyboard.filter(function (d) {
+              return d.note == e.note;
+            }).classed("key--highlight", false).dispatch(NOTEDIM);
           });
 
           keyboard.on(over, function (d) {
@@ -13402,7 +13431,7 @@ var     HTMLElement$1 = root.HTMLElement;
             oscillator2.connect(gain);
             gain.gain.value = 0;
             gain.gain.linearRampToValueAtTime(.1, now + .05);
-            gain.gain.linearRampToValueAtTime(0.005, now + 6);
+            gain.gain.linearRampToValueAtTime(0.005, now + 5);
             this.gain = gain;
             filter.frequency.value = d.frequency;
             filter.type = "bandpass";
@@ -13431,7 +13460,7 @@ var     HTMLElement$1 = root.HTMLElement;
             // By declaring the property an attribute, we can now pass an initial value
             // for the count as part of the HTML.
             notesInOctave: number({ attribute: true, default: 12 }),
-            raisedKeys: array({ attribute: true, default: [1, 3, 6, 8, 10] }),
+            raisedNotes: array({ attribute: true, default: [2, 4, 7, 9, 11] }),
             octaves: number({ attribute: true, default: 2 }),
             sweep: number({ attribute: true, default: 90,
               deserialize: function deserialize(val) {
