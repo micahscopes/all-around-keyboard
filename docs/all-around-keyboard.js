@@ -11278,6 +11278,39 @@ var     HTMLElement$1 = root.HTMLElement;
       return TheEvent;
     }(root.Event);
 
+    function createCustomEvent(name) {
+      var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var detail = opts.detail;
+
+      delete opts.detail;
+
+      var e = void 0;
+      if (Event$1) {
+        e = new Event$1(name, opts);
+        Object.defineProperty(e, 'detail', { value: detail });
+      } else {
+        e = document.createEvent('CustomEvent');
+        Object.defineProperty(e, 'composed', { value: opts.composed });
+        e.initCustomEvent(name, opts.bubbles, opts.cancelable, detail);
+      }
+      return e;
+    }
+
+    function emit (elem, name) {
+      var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (opts.bubbles === undefined) {
+        opts.bubbles = true;
+      }
+      if (opts.cancelable === undefined) {
+        opts.cancelable = true;
+      }
+      if (opts.composed === undefined) {
+        opts.composed = true;
+      }
+      return elem.dispatchEvent(createCustomEvent(name, opts));
+    }
+
     var h = builder();
 
     var Pentatonic = [2, 4, 7, 9, 11];
@@ -12423,6 +12456,57 @@ var     HTMLElement$1 = root.HTMLElement;
       }
     };
 
+    var LILSYNTH = Symbol();
+
+    function setupLilSynth() {
+      var AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+      if (!AudioContext) return console.error("AudioContext not supported");
+      if (!OscillatorNode.prototype.start) OscillatorNode.prototype.start = OscillatorNode.prototype.noteOn;
+      if (!OscillatorNode.prototype.stop) OscillatorNode.prototype.stop = OscillatorNode.prototype.noteOff;
+
+      if (!window[LILSYNTH]) {
+        window[LILSYNTH] = new AudioContext();
+      }
+    }
+
+    function soundKey(key, frequency) {
+      // console.log(d,i,"hey!!!!");
+      var context = window[LILSYNTH];
+      var now = context.currentTime,
+          oscillator = context.createOscillator(),
+          oscillator2 = context.createOscillator(),
+          filter = context.createBiquadFilter(),
+          gain = context.createGain();
+      oscillator.type = "sawtooth";
+      oscillator.frequency.value = frequency / 2;
+      oscillator.connect(filter);
+      oscillator2.frequency.value = frequency;
+      oscillator2.connect(gain);
+      gain.gain.value = 0;
+      gain.gain.linearRampToValueAtTime(.1, now + .05);
+      gain.gain.linearRampToValueAtTime(0.005, now + 5);
+      key.gain = gain;
+      filter.frequency.value = frequency;
+      filter.type = "bandpass";
+      filter.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(0);
+      key.oscillator = oscillator;
+      setTimeout(function () {
+        oscillator.stop();
+      }, 10000);
+    }
+
+    function dampKey(key) {
+      var context = window[LILSYNTH];
+      var now = context.currentTime;
+      var oscillator = key.oscillator;
+      key.gain.gain.linearRampToValueAtTime(0, now + 0.5);
+      setTimeout(function () {
+        oscillator.stop();
+      }, 500);
+    }
+
     var xhtml = "http://www.w3.org/1999/xhtml";
 
     var namespaces = {
@@ -13261,44 +13345,104 @@ var     HTMLElement$1 = root.HTMLElement;
         return typeof selector === "string" ? new Selection([[document.querySelector(selector)]], [document.documentElement]) : new Selection([[selector]], root$1);
     }
 
-    var audio = Symbol();
+    var _this = undefined;
+
+    var KEYBOARD = Symbol();
+    var KEYS = Symbol();
     var shadowSVG = Symbol();
 
     var SVGStrokePadding = 5;
-    var KEYPRESS = 'keypress';
-    var KEYRELEASE = 'keyrelease';
-
-    var KEYLIGHT = 'keylight';
-    var KEYDIM = 'keydim';
-
-    var NOTELIGHT = 'notelight';
-    var NOTEDIM = 'notedim';
 
     var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: yellow; }\n\n.key--highlight {\n    stroke: #0095ff;\n    stroke-width: 5px;\n}\n\n.key--highlight.key--lower { fill: #eee }\n.key--highlight.key--upper { fill: #444 }\n';
 
-    var KeyboardElement = customElements.define('all-around-keyboard', function (_Component) {
-      inherits(_class, _Component);
+    function setupKeyboard() {
+      var elem = this; //make sure to bind elem to this function
+      var outerRadius = (this.width - SVGStrokePadding * 2) / (2 * Math.sin(Math.min(this.sweep, Math.PI) / 2));
+      var chordLength = outerRadius * 2 * Math.sin(this.sweep / 2);
+      var innerRadius = outerRadius - this.depth;
+      var startAngle = -this.sweep / 2;
+      var endAngle = this.sweep / 2;
+      // sagitta, long and short
+      var height;
+      if (this.sweep > Math.PI) {
+        height = outerRadius + Math.sqrt(Math.pow(outerRadius, 2) - Math.pow(chordLength / 2, 2));
+      } else {
+        height = outerRadius - Math.sqrt(Math.pow(outerRadius, 2) - Math.pow(chordLength / 2, 2)) + this.depth * Math.cos(this.sweep / 2);
+      }
+      height += SVGStrokePadding;
 
-      function _class() {
-        classCallCheck(this, _class);
-        return possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+      var svg = select(this[shadowSVG]).attr("viewBox", "0 0 " + this.width + " " + height).attr("width", "100%");
+
+      var g = svg.select("g").attr("transform", "translate(" + this.width / 2 + "," + (outerRadius + SVGStrokePadding / 2) + ")");
+
+      var drawKeys = arc().cornerRadius(2)
+      // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
+      .innerRadius(function (d) {
+        return d.raised ? innerRadius + elem.depth / (elem.overlapping + 2) : innerRadius;
+      }).outerRadius(function (d) {
+        return d.raised ? outerRadius : outerRadius - elem.depth / (elem.overlapping + 2);
+      });
+
+      // DATA JOIN
+      this[KEYS] = keyLayout().octaves(this.octaves).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave);
+
+      this[KEYBOARD] = g.selectAll("path").data(this[KEYS]);
+
+      // EXIT
+      this[KEYBOARD].exit().on(KEYPRESS, null).remove();
+
+      // UPDATE
+
+      // ENTER
+      // var context = this[AUDIO];
+      this[KEYBOARD] = this[KEYBOARD].enter().append("path").merge(this[KEYBOARD]).attr("class", function (d) {
+        return "key key--" + (d.raised ? "upper" : "lower");
+      }).attr("d", drawKeys);
+    }
+
+    var multiEmitter = function multiEmitter(eventType, indexName) {
+      return function (Ks) {
+        var _ref;
+
+        Ks = (_ref = []).concat.apply(_ref, [Ks]);
+        Ks.forEach(function (k) {
+          var o = { detail: {} };
+          o.detail[indexName] = k;
+          emit(_this, eventType, o);
+        });
+      };
+    };
+
+    var KEYPRESS = 'keypress';
+    var KEYRELEASE = 'keyrelease';
+    var KEYLIGHT = 'keylight';
+    var KEYDIM = 'keydim';
+    var NOTELIGHT = 'notelight';
+    var NOTEDIM = 'notedim';
+
+    var KeyboardElement = customElements.define('all-around-keyboard', function (_Component) {
+      inherits(_class2, _Component);
+
+      function _class2() {
+        var _ref2;
+
+        var _temp, _this2, _ret;
+
+        classCallCheck(this, _class2);
+
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+
+        return _ret = (_temp = (_this2 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this2), _this2.keysPress = multiEmitter.bind(_this2)(KEYPRESS, 'k'), _this2.keysRelease = multiEmitter.bind(_this2)(KEYRELEASE, 'k'), _this2.keysLight = multiEmitter.bind(_this2)(KEYLIGHT, 'k'), _this2.keysDim = multiEmitter.bind(_this2)(KEYDIM, 'k'), _this2.notesLight = multiEmitter.bind(_this2)(NOTELIGHT, 'i'), _this2.notesDim = multiEmitter.bind(_this2)(NOTEDIM, 'i'), _temp), possibleConstructorReturn(_this2, _ret);
       }
 
-      createClass(_class, [{
+      createClass(_class2, [{
         key: 'connectedCallback',
         value: function connectedCallback() {
           // Ensure we call the parent.
-          get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'connectedCallback', this).call(this);
-          var AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-          if (!AudioContext) return console.error("AudioContext not supported");
-          if (!OscillatorNode.prototype.start) OscillatorNode.prototype.start = OscillatorNode.prototype.noteOn;
-          if (!OscillatorNode.prototype.stop) OscillatorNode.prototype.stop = OscillatorNode.prototype.noteOff;
-
-          if (!window[audio]) {
-            window[audio] = new AudioContext();
-          }
-
-          this[audio] = window[audio];
+          get(_class2.prototype.__proto__ || Object.getPrototypeOf(_class2.prototype), 'connectedCallback', this).call(this);
+          setupLilSynth();
 
           this[shadowSVG] = document.createElementNS(namespaces.svg, "svg");
           select(this[shadowSVG]).append("g");
@@ -13307,7 +13451,7 @@ var     HTMLElement$1 = root.HTMLElement;
         key: 'disconnectedCallback',
         value: function disconnectedCallback() {
           // Ensure we callback the parent.
-          get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'disconnectedCallback', this).call(this);
+          get(_class2.prototype.__proto__ || Object.getPrototypeOf(_class2.prototype), 'disconnectedCallback', this).call(this);
 
           // If we didn't clean up after ourselves, we'd continue to render
           // unnecessarily.
@@ -13316,143 +13460,69 @@ var     HTMLElement$1 = root.HTMLElement;
       }, {
         key: 'renderCallback',
         value: function renderCallback() {
-          // By separating the strings (and not using template literals or string
-          // concatenation) it ensures the strings are diffed indepenedently. If
-          // you select "Count" with your mouse, it will not deselect whenr endered.
           return [h('div'), h('style', css)];
         }
       }, {
         key: 'renderedCallback',
         value: function renderedCallback() {
-          var _this2 = this;
+          var _this3 = this;
 
-          var elem = this;
           this.shadowRoot.children[0].appendChild(this[shadowSVG]);
 
-          var outerRadius = (this.width - SVGStrokePadding * 2) / (2 * Math.sin(Math.min(this.sweep, Math.PI) / 2));
-          var chordLength = outerRadius * 2 * Math.sin(this.sweep / 2);
-          var innerRadius = outerRadius - this.depth;
-          var startAngle = -this.sweep / 2;
-          var endAngle = this.sweep / 2;
-          // sagitta, long and short
-          var height;
-          if (this.sweep > Math.PI) {
-            height = outerRadius + Math.sqrt(Math.pow(outerRadius, 2) - Math.pow(chordLength / 2, 2));
-          } else {
-            height = outerRadius - Math.sqrt(Math.pow(outerRadius, 2) - Math.pow(chordLength / 2, 2)) + this.depth * Math.cos(this.sweep / 2);
-          }
-          height += SVGStrokePadding;
-
-          var svg = select(this[shadowSVG]).attr("viewBox", "0 0 " + this.width + " " + height).attr("width", "100%");
-
-          var g = svg.select("g").attr("transform", "translate(" + this.width / 2 + "," + (outerRadius + SVGStrokePadding / 2) + ")");
-
-          var drawKeys = arc().cornerRadius(2)
-          // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
-          .innerRadius(function (d) {
-            return d.raised ? innerRadius + elem.depth / (elem.overlapping + 2) : innerRadius;
-          }).outerRadius(function (d) {
-            return d.raised ? outerRadius : outerRadius - elem.depth / (elem.overlapping + 2);
-          });
-
-          // DATA JOIN
-          var keys = keyLayout().octaves(this.octaves).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave);
-
-          var keyboard = g.selectAll("path").data(keys);
-
-          // EXIT
-          keyboard.exit().on(KEYPRESS, null).remove();
-
-          // UPDATE
-          var over = "ontouchstart" in window ? "touchstart" : "mouseover";
-          var out = "ontouchstart" in window ? "touchend" : "mouseout";
-
-          // ENTER
-          var context = this[audio];
-          keyboard = keyboard.enter().append("path").merge(keyboard).attr("class", function (d) {
-            return "key key--" + (d.raised ? "upper" : "lower");
-            // + " " + keyNoteClass(d.note)
-            // + " " + keyIndexClass(d.index);
-          }).attr("d", drawKeys);
+          setupKeyboard.call(this);
 
           this.addEventListener(KEYPRESS, function (e) {
-            keyboard.filter(function (d) {
+            this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--pressed", true).dispatch(KEYPRESS);
           });
 
           this.addEventListener(KEYRELEASE, function (e) {
-            keyboard.filter(function (d) {
+            this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--pressed", false).dispatch(KEYRELEASE);
           });
 
           this.addEventListener(KEYLIGHT, function (e) {
-            keyboard.filter(function (d) {
+            this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--highlight", true).dispatch(KEYLIGHT);
           });
 
           this.addEventListener(KEYDIM, function (e) {
-            keyboard.filter(function (d) {
+            this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--highlight", false).dispatch(KEYDIM);
           });
 
           this.addEventListener(NOTELIGHT, function (e) {
-            keyboard.filter(function (d) {
+            this[KEYBOARD].filter(function (d) {
               return d.note == e.note;
             }).classed("key--highlight", true).dispatch(NOTELIGHT);
           });
 
           this.addEventListener(NOTEDIM, function (e) {
-            keyboard.filter(function (d) {
+            this[KEYBOARD].filter(function (d) {
               return d.note == e.note;
             }).classed("key--highlight", false).dispatch(NOTEDIM);
           });
 
-          keyboard.on(over, function (d) {
+          var over = "ontouchstart" in window ? "touchstart" : "mouseover";
+          var out = "ontouchstart" in window ? "touchend" : "mouseout";
+
+          this[KEYBOARD].on(over, function (d) {
             var e = new Event(KEYPRESS);e.index = d.index;
-            _this2.dispatchEvent(e);
+            _this3.dispatchEvent(e);
           }).on(out, function (d) {
             var e = new Event(KEYRELEASE);e.index = d.index;
-            _this2.dispatchEvent(e);
+            _this3.dispatchEvent(e);
           });
 
-          keyboard.on(KEYPRESS, function (d, i) {
-            // console.log(d,i,"hey!!!!");
-            var now = context.currentTime,
-                oscillator = context.createOscillator(),
-                oscillator2 = context.createOscillator(),
-                filter = context.createBiquadFilter(),
-                gain = context.createGain();
-            oscillator.type = "sawtooth";
-            oscillator.frequency.value = d.frequency / 2;
-            oscillator.connect(filter);
-            oscillator2.frequency.value = d.frequency;
-            oscillator2.connect(gain);
-            gain.gain.value = 0;
-            gain.gain.linearRampToValueAtTime(.1, now + .05);
-            gain.gain.linearRampToValueAtTime(0.005, now + 5);
-            this.gain = gain;
-            filter.frequency.value = d.frequency;
-            filter.type = "bandpass";
-            filter.connect(gain);
-            gain.connect(context.destination);
-            oscillator.start(0);
-            this.oscillator = oscillator;
-            setTimeout(function () {
-              oscillator.stop();
-            }, 10000);
+          this[KEYBOARD].on(KEYPRESS, function (d, i) {
+            return soundKey(_this3, d.frequency);
           });
-
-          keyboard.on(KEYRELEASE, function (d, i) {
-            var now = context.currentTime;
-            var oscillator = this.oscillator;
-            this.gain.gain.linearRampToValueAtTime(0, now + 0.2);
-            setTimeout(function () {
-              oscillator.stop();
-            }, 500);
+          this[KEYBOARD].on(KEYRELEASE, function (d, i) {
+            return dampKey(_this3);
           });
         }
       }], [{
@@ -13478,7 +13548,7 @@ var     HTMLElement$1 = root.HTMLElement;
           };
         }
       }]);
-      return _class;
+      return _class2;
     }(_class2));
 
     exports.KeyboardElement = KeyboardElement;

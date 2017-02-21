@@ -1,24 +1,15 @@
 import 'skatejs-web-components';
-import { define, h, Component, prop } from 'skatejs';
-import { keyLayout } from './key-layout.js'
+import { define, h, Component, prop, emit } from 'skatejs';
+import { keyLayout } from './key-layout'
 import { arc, pie } from 'd3-shape';
+import { setupLilSynth, soundKey, dampKey } from './lil-synth'
 import { select, selectAll, namespaces } from 'd3-selection';
 
-const audio = Symbol();
+const KEYBOARD = Symbol();
+const KEYS = Symbol();
 const shadowSVG = Symbol();
 
 const SVGStrokePadding = 5;
-const KEYPRESS = 'keypress';
-const KEYRELEASE = 'keyrelease';
-
-const KEYLIGHT = 'keylight';
-const KEYDIM = 'keydim';
-
-const NOTELIGHT = 'notelight';
-const NOTEDIM = 'notedim';
-
-var keyNoteClass = (n) => 'key--note-'+n;
-var keyIndexClass = (n) => 'key--index-'+n;
 
 const css = `
 all-around-keyboard {
@@ -50,7 +41,89 @@ all-around-keyboard {
 .key--highlight.key--upper { fill: #444 }
 `
 
+function setupKeyboard(){
+  var elem = this; //make sure to bind elem to this function
+  var outerRadius = (this.width-SVGStrokePadding*2)/(2*Math.sin(Math.min(this.sweep,Math.PI)/2));
+  var chordLength = outerRadius*2*Math.sin(this.sweep/2);
+  var innerRadius = outerRadius - this.depth;
+  var startAngle = -this.sweep/2;
+  var endAngle = this.sweep/2;
+  // sagitta, long and short
+  var height;
+  if(this.sweep > Math.PI) {
+    height = outerRadius + Math.sqrt(Math.pow(outerRadius,2) - Math.pow(chordLength/2,2));
+  } else {
+    height = outerRadius - Math.sqrt(
+      Math.pow(outerRadius,2) - Math.pow(chordLength/2,2)) + this.depth*Math.cos(this.sweep/2)
+  }
+  height += SVGStrokePadding;
+
+  var svg = select(this[shadowSVG])
+      .attr("viewBox", "0 0 "+this.width+" "+height)
+      .attr("width","100%")
+
+  var g = svg
+      .select("g")
+      .attr("transform", "translate(" + (this.width / 2) + "," + (outerRadius + SVGStrokePadding/2) + ")");
+
+  var drawKeys = arc()
+      .cornerRadius(2)
+      // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
+      .innerRadius(function(d) {
+        return d.raised ? innerRadius + elem.depth/(elem.overlapping+2): innerRadius;
+      })
+      .outerRadius(function(d) {
+        return d.raised ? outerRadius : outerRadius - elem.depth/(elem.overlapping+2);
+      });
+
+  // DATA JOIN
+  this[KEYS] = keyLayout()
+            .octaves(this.octaves)
+            .raisedPattern(this.raisedNotes)
+            .startAngle(startAngle)
+            .endAngle(endAngle)
+            .octaveSize(this.notesInOctave)
+
+  this[KEYBOARD] = g.selectAll("path").data(this[KEYS]);
+
+  // EXIT
+  this[KEYBOARD].exit().on(KEYPRESS,null).remove();
+
+  // UPDATE
+
+  // ENTER
+  // var context = this[AUDIO];
+  this[KEYBOARD] = this[KEYBOARD].enter().append("path").merge(this[KEYBOARD])
+    .attr("class", function(d) {
+      return "key key--" + (d.raised ? "upper" : "lower");
+    })
+    .attr("d", drawKeys);
+}
+
+const multiEmitter = (eventType,indexName) => (Ks) => {
+  Ks = [].concat(...[Ks]);
+  Ks.forEach((k) => {
+    let o = {detail:{}};
+    o.detail[indexName] = k
+    emit(this,eventType,o);
+  })
+} ;
+
+const KEYPRESS = 'keypress';
+const KEYRELEASE = 'keyrelease';
+const KEYLIGHT = 'keylight';
+const KEYDIM = 'keydim';
+const NOTELIGHT = 'notelight';
+const NOTEDIM = 'notedim';
+
 const KeyboardElement = customElements.define('all-around-keyboard', class extends Component {
+  keysPress = multiEmitter.bind(this)(KEYPRESS,'k');
+  keysRelease = multiEmitter.bind(this)(KEYRELEASE,'k')
+  keysLight = multiEmitter.bind(this)(KEYLIGHT,'k')
+  keysDim = multiEmitter.bind(this)(KEYDIM,'k')
+  notesLight = multiEmitter.bind(this)(NOTELIGHT,'i')
+  notesDim = multiEmitter.bind(this)(NOTEDIM,'i')
+
   static get props () {
     return {
       // By declaring the property an attribute, we can now pass an initial value
@@ -74,16 +147,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
   connectedCallback () {
     // Ensure we call the parent.
     super.connectedCallback();
-    var AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-    if (!AudioContext) return console.error("AudioContext not supported");
-    if (!OscillatorNode.prototype.start) OscillatorNode.prototype.start = OscillatorNode.prototype.noteOn;
-    if (!OscillatorNode.prototype.stop) OscillatorNode.prototype.stop = OscillatorNode.prototype.noteOff;
-
-    if(!window[audio]){
-      window[audio] = new AudioContext;
-    }
-
-    this[audio] = window[audio];
+    setupLilSynth();
 
     this[shadowSVG] = document.createElementNS(namespaces.svg,"svg");
     select(this[shadowSVG]).append("g");
@@ -100,111 +164,51 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
   }
 
   renderCallback () {
-    // By separating the strings (and not using template literals or string
-    // concatenation) it ensures the strings are diffed indepenedently. If
-    // you select "Count" with your mouse, it will not deselect whenr endered.
     return [h('div'),h('style',css)];
   }
 
   renderedCallback() {
-    var elem = this;
     this.shadowRoot.children[0].appendChild(this[shadowSVG]);
 
-    var outerRadius = (this.width-SVGStrokePadding*2)/(2*Math.sin(Math.min(this.sweep,Math.PI)/2));
-    var chordLength = outerRadius*2*Math.sin(this.sweep/2);
-    var innerRadius = outerRadius - this.depth;
-    var startAngle = -this.sweep/2;
-    var endAngle = this.sweep/2;
-    // sagitta, long and short
-    var height;
-    if(this.sweep > Math.PI) {
-      height = outerRadius + Math.sqrt(Math.pow(outerRadius,2) - Math.pow(chordLength/2,2));
-    } else {
-      height = outerRadius - Math.sqrt(
-        Math.pow(outerRadius,2) - Math.pow(chordLength/2,2)) + this.depth*Math.cos(this.sweep/2)
-    }
-    height += SVGStrokePadding;
-
-
-    var svg = select(this[shadowSVG])
-        .attr("viewBox", "0 0 "+this.width+" "+height)
-        .attr("width","100%")
-
-    var g = svg
-        .select("g")
-        .attr("transform", "translate(" + (this.width / 2) + "," + (outerRadius + SVGStrokePadding/2) + ")");
-
-    var drawKeys = arc()
-        .cornerRadius(2)
-        // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
-        .innerRadius(function(d) {
-          return d.raised ? innerRadius + elem.depth/(elem.overlapping+2): innerRadius;
-        })
-        .outerRadius(function(d) {
-          return d.raised ? outerRadius : outerRadius - elem.depth/(elem.overlapping+2);
-        });
-
-    // DATA JOIN
-    let keys = keyLayout()
-              .octaves(this.octaves)
-              .raisedPattern(this.raisedNotes)
-              .startAngle(startAngle)
-              .endAngle(endAngle)
-              .octaveSize(this.notesInOctave)
-
-    let keyboard = g.selectAll("path").data(keys);
-
-    // EXIT
-    keyboard.exit().on(KEYPRESS,null).remove();
-
-    // UPDATE
-    var over = ("ontouchstart" in window) ? "touchstart" : "mouseover";
-    var out = ("ontouchstart" in window) ? "touchend" : "mouseout";
-
-    // ENTER
-    var context = this[audio];
-    keyboard = keyboard.enter().append("path").merge(keyboard)
-      .attr("class", function(d) {
-        return "key key--" + (d.raised ? "upper" : "lower");
-        // + " " + keyNoteClass(d.note)
-        // + " " + keyIndexClass(d.index);
-      })
-      .attr("d", drawKeys);
+    setupKeyboard.call(this);
 
     this.addEventListener(KEYPRESS,function(e){
-      keyboard.filter((d)=>d.index == e.index)
+      this[KEYBOARD].filter((d)=>d.index == e.index)
       .classed("key--pressed",true)
       .dispatch(KEYPRESS);
     })
 
     this.addEventListener(KEYRELEASE,function(e){
-      keyboard.filter((d)=>d.index == e.index).classed("key--pressed",false)
+      this[KEYBOARD].filter((d)=>d.index == e.index).classed("key--pressed",false)
       .dispatch(KEYRELEASE);
     })
 
     this.addEventListener(KEYLIGHT,function(e){
-      keyboard.filter((d)=>d.index == e.index)
+      this[KEYBOARD].filter((d)=>d.index == e.index)
       .classed("key--highlight",true)
       .dispatch(KEYLIGHT);
     })
 
     this.addEventListener(KEYDIM,function(e){
-      keyboard.filter((d)=>d.index == e.index).classed("key--highlight",false)
+      this[KEYBOARD].filter((d)=>d.index == e.index).classed("key--highlight",false)
       .dispatch(KEYDIM);
     })
 
     this.addEventListener(NOTELIGHT,function(e){
-      keyboard.filter((d)=>d.note == e.note)
+      this[KEYBOARD].filter((d)=>d.note == e.note)
       .classed("key--highlight",true)
       .dispatch(NOTELIGHT);
     })
 
     this.addEventListener(NOTEDIM,function(e){
-      keyboard.filter((d)=>d.note == e.note).classed("key--highlight",false)
+      this[KEYBOARD].filter((d)=>d.note == e.note).classed("key--highlight",false)
       .dispatch(NOTEDIM);
     })
 
-    keyboard
+    var over = ("ontouchstart" in window) ? "touchstart" : "mouseover";
+    var out = ("ontouchstart" in window) ? "touchend" : "mouseout";
+
+    this[KEYBOARD]
       .on(over, (d) => {
         var e = new Event(KEYPRESS); e.index = d.index;
         this.dispatchEvent(e)})
@@ -212,37 +216,8 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
         var e = new Event(KEYRELEASE); e.index = d.index;
         this.dispatchEvent(e)})
 
-    keyboard.on(KEYPRESS, function(d, i) {
-      // console.log(d,i,"hey!!!!");
-      let now = context.currentTime,
-          oscillator = context.createOscillator(),
-          oscillator2 = context.createOscillator(),
-          filter = context.createBiquadFilter(),
-          gain = context.createGain();
-      oscillator.type = "sawtooth";
-      oscillator.frequency.value = d.frequency/2;
-      oscillator.connect(filter);
-      oscillator2.frequency.value = d.frequency;
-      oscillator2.connect(gain);
-      gain.gain.value = 0;
-      gain.gain.linearRampToValueAtTime(.1, now + .05);
-      gain.gain.linearRampToValueAtTime(0.005, now + 5);
-      this.gain = gain;
-      filter.frequency.value = d.frequency;
-      filter.type = "bandpass";
-      filter.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(0);
-      this.oscillator = oscillator;
-      setTimeout(function() { oscillator.stop(); }, 10000);
-    });
-
-    keyboard.on(KEYRELEASE, function(d, i) {
-      let now = context.currentTime;
-      let oscillator = this.oscillator;
-      this.gain.gain.linearRampToValueAtTime(0, now + 0.2);
-      setTimeout(function() { oscillator.stop(); }, 500);
-    });
+    this[KEYBOARD].on(KEYPRESS, (d,i) => soundKey(this,d.frequency));
+    this[KEYBOARD].on(KEYRELEASE, (d,i) => dampKey(this));
 
 
   }
