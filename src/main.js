@@ -7,6 +7,7 @@ import { select, selectAll, namespaces } from 'd3-selection';
 const audio = Symbol();
 const shadowSVG = Symbol();
 
+const SVGStrokePadding = 5;
 const KEYPRESS = 'keypress';
 const KEYRELEASE = 'keyrelease';
 
@@ -109,7 +110,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     var elem = this;
     this.shadowRoot.children[0].appendChild(this[shadowSVG]);
 
-    var outerRadius = this.width/(2*Math.sin(Math.min(this.sweep,Math.PI)/2));
+    var outerRadius = (this.width-SVGStrokePadding*2)/(2*Math.sin(Math.min(this.sweep,Math.PI)/2));
     var chordLength = outerRadius*2*Math.sin(this.sweep/2);
     var innerRadius = outerRadius - this.depth;
     var startAngle = -this.sweep/2;
@@ -125,12 +126,12 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
 
 
     var svg = select(this[shadowSVG])
-        .attr("width", this.width)
-        .attr("height", height)
+        .attr("viewBox", "0 0 "+this.width+" "+height)
+        .attr("width","100%")
 
     var g = svg
         .select("g")
-        .attr("transform", "translate(" + (this.width / 2) + "," + outerRadius + ")");
+        .attr("transform", "translate(" + ((this.width + SVGStrokePadding) / 2) + "," + outerRadius + ")");
 
     var drawKeys = arc()
         .cornerRadius(2)

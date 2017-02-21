@@ -13264,6 +13264,7 @@ var     HTMLElement$1 = root.HTMLElement;
     var audio = Symbol();
     var shadowSVG = Symbol();
 
+    var SVGStrokePadding = 5;
     var KEYPRESS = 'keypress';
     var KEYRELEASE = 'keyrelease';
 
@@ -13328,7 +13329,7 @@ var     HTMLElement$1 = root.HTMLElement;
           var elem = this;
           this.shadowRoot.children[0].appendChild(this[shadowSVG]);
 
-          var outerRadius = this.width / (2 * Math.sin(Math.min(this.sweep, Math.PI) / 2));
+          var outerRadius = (this.width - SVGStrokePadding * 2) / (2 * Math.sin(Math.min(this.sweep, Math.PI) / 2));
           var chordLength = outerRadius * 2 * Math.sin(this.sweep / 2);
           var innerRadius = outerRadius - this.depth;
           var startAngle = -this.sweep / 2;
@@ -13341,9 +13342,9 @@ var     HTMLElement$1 = root.HTMLElement;
             height = outerRadius - Math.sqrt(Math.pow(outerRadius, 2) - Math.pow(chordLength / 2, 2)) + this.depth * Math.cos(this.sweep / 2);
           }
 
-          var svg = select(this[shadowSVG]).attr("width", this.width).attr("height", height);
+          var svg = select(this[shadowSVG]).attr("viewBox", "0 0 " + this.width + " " + height).attr("width", "100%");
 
-          var g = svg.select("g").attr("transform", "translate(" + this.width / 2 + "," + outerRadius + ")");
+          var g = svg.select("g").attr("transform", "translate(" + (this.width + SVGStrokePadding) / 2 + "," + outerRadius + ")");
 
           var drawKeys = arc().cornerRadius(2)
           // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
