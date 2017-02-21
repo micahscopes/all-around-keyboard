@@ -5,7 +5,7 @@ a web component for round pianos
 
 ## usage:
 ```html
-<script src=".../all-around-keyboard.min.js"></src>
+<script src=".../all-around-keyboard.min.js"></script>
 
 <all-around-keyboard  notes-in-octave=12
                       raised-notes="[2,4,7,9,11]"
