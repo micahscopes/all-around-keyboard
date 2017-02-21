@@ -13323,7 +13323,7 @@ var     HTMLElement$1 = root.HTMLElement;
 
     var SVGStrokePadding = 5;
 
-    var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: yellow; }\n\n.key--highlight {\n    stroke: #0095ff;\n    stroke-width: 5px;\n}\n\n.key--highlight.key--lower { fill: #eee }\n.key--highlight.key--upper { fill: #444 }\n';
+    var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: yellow; }\n\n.key--highlight {\n  stroke: rgba(0, 207, 253, 0.48);\n  stroke-width: 7px;\n  // stroke-dasharray: 8,2;\n}\n\n.key--highlight.key--lower { fill: #eee }\n.key--highlight.key--upper { fill: #444 }\n';
 
     function setupKeyboard() {
       var elem = this; //make sure to bind elem to this function

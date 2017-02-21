@@ -35,18 +35,24 @@
 </style>
 
 ## Pressing and releasing keys
-Key presses/releases:
 ``` javascript
-// select the element
+// select the keyboard
 let kb = document.querySelector('all-around-keyboard');
 
-// press and release events
-let press = new Event('keypress'); press.index = 7;
-let release = new Event('keyrelease'); release.index = 7;
+kb.keysPress([2,6,9,11,18])
+setTimeout(() => { kb.keysRelease([2,6,9,11,18]) }, 4000);
+```
 
-kb.dispatchEvent(press); // press key with key.index == 7;
-// ... sometime later on
-kb.dispatchEvent(release); // release the key
+## Lighting and dimming keys
+``` javascript
+kb.keysLight([2,6,9,11,18])
+setTimeout(() => { kb.keysDim([2,6,9,11,18]) }, 4000);
+```
+
+## Lighting and dimming notes (pitch classes)
+``` javascript
+kb.notesLight([2,4,6,7,9,11,1])
+setTimeout(() => { kb.notesDim([2,4,6,7,9,11,1]) }, 4000);
 ```
 
 ### *inspired by mbostock's [arc piano example for d3](https://bl.ocks.org/mbostock/5723d93e4f617b542991) *

@@ -33,8 +33,9 @@ all-around-keyboard {
   { fill: yellow; }
 
 .key--highlight {
-    stroke: #0095ff;
-    stroke-width: 5px;
+  stroke: rgba(0, 207, 253, 0.48);
+  stroke-width: 7px;
+  // stroke-dasharray: 8,2;
 }
 
 .key--highlight.key--lower { fill: #eee }
