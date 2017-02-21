@@ -13341,10 +13341,11 @@ var     HTMLElement$1 = root.HTMLElement;
           } else {
             height = outerRadius - Math.sqrt(Math.pow(outerRadius, 2) - Math.pow(chordLength / 2, 2)) + this.depth * Math.cos(this.sweep / 2);
           }
+          height += SVGStrokePadding;
 
           var svg = select(this[shadowSVG]).attr("viewBox", "0 0 " + this.width + " " + height).attr("width", "100%");
 
-          var g = svg.select("g").attr("transform", "translate(" + (this.width + SVGStrokePadding) / 2 + "," + outerRadius + ")");
+          var g = svg.select("g").attr("transform", "translate(" + this.width / 2 + "," + (outerRadius + SVGStrokePadding / 2) + ")");
 
           var drawKeys = arc().cornerRadius(2)
           // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })

@@ -123,6 +123,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       height = outerRadius - Math.sqrt(
         Math.pow(outerRadius,2) - Math.pow(chordLength/2,2)) + this.depth*Math.cos(this.sweep/2)
     }
+    height += SVGStrokePadding;
 
 
     var svg = select(this[shadowSVG])
@@ -131,7 +132,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
 
     var g = svg
         .select("g")
-        .attr("transform", "translate(" + ((this.width + SVGStrokePadding) / 2) + "," + outerRadius + ")");
+        .attr("transform", "translate(" + (this.width / 2) + "," + (outerRadius + SVGStrokePadding/2) + ")");
 
     var drawKeys = arc()
         .cornerRadius(2)
