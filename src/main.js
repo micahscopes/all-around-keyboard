@@ -89,8 +89,6 @@ function setupKeyboard(){
   // EXIT
   this[KEYBOARD].exit().on(KEYPRESS,null).remove();
 
-  // UPDATE
-
   // ENTER
   // var context = this[AUDIO];
   this[KEYBOARD] = this[KEYBOARD].enter().append("path").merge(this[KEYBOARD])
