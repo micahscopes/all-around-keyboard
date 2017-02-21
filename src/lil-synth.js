@@ -41,8 +41,9 @@ function dampKey(key) {
   let context = window[LILSYNTH];
   let now = context.currentTime;
   let oscillator = key.oscillator;
-  key.gain.gain.linearRampToValueAtTime(0, now + 0.3);
-  setTimeout(function() { oscillator.stop(); }, 500);
+  let gain = key.gain;
+  if (gain){ key.gain.gain.linearRampToValueAtTime(0, now + 0.3); }
+  if (oscillator){ setTimeout(function() { oscillator.stop(); }, 500); }
 }
 
 

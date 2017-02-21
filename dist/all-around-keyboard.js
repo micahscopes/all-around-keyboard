@@ -11278,39 +11278,6 @@ var     HTMLElement$1 = root.HTMLElement;
       return TheEvent;
     }(root.Event);
 
-    function createCustomEvent(name) {
-      var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var detail = opts.detail;
-
-      delete opts.detail;
-
-      var e = void 0;
-      if (Event$1) {
-        e = new Event$1(name, opts);
-        Object.defineProperty(e, 'detail', { value: detail });
-      } else {
-        e = document.createEvent('CustomEvent');
-        Object.defineProperty(e, 'composed', { value: opts.composed });
-        e.initCustomEvent(name, opts.bubbles, opts.cancelable, detail);
-      }
-      return e;
-    }
-
-    function emit (elem, name) {
-      var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-      if (opts.bubbles === undefined) {
-        opts.bubbles = true;
-      }
-      if (opts.cancelable === undefined) {
-        opts.cancelable = true;
-      }
-      if (opts.composed === undefined) {
-        opts.composed = true;
-      }
-      return elem.dispatchEvent(createCustomEvent(name, opts));
-    }
-
     var h = builder();
 
     var Pentatonic = [2, 4, 7, 9, 11];
@@ -12501,10 +12468,15 @@ var     HTMLElement$1 = root.HTMLElement;
       var context = window[LILSYNTH];
       var now = context.currentTime;
       var oscillator = key.oscillator;
-      key.gain.gain.linearRampToValueAtTime(0, now + 0.5);
-      setTimeout(function () {
-        oscillator.stop();
-      }, 500);
+      var gain = key.gain;
+      if (gain) {
+        key.gain.gain.linearRampToValueAtTime(0, now + 0.3);
+      }
+      if (oscillator) {
+        setTimeout(function () {
+          oscillator.stop();
+        }, 500);
+      }
     }
 
     var xhtml = "http://www.w3.org/1999/xhtml";
@@ -13345,8 +13317,6 @@ var     HTMLElement$1 = root.HTMLElement;
         return typeof selector === "string" ? new Selection([[document.querySelector(selector)]], [document.documentElement]) : new Selection([[selector]], root$1);
     }
 
-    var _this = undefined;
-
     var KEYBOARD = Symbol();
     var KEYS = Symbol();
     var shadowSVG = Symbol();
@@ -13391,8 +13361,6 @@ var     HTMLElement$1 = root.HTMLElement;
       // EXIT
       this[KEYBOARD].exit().on(KEYPRESS, null).remove();
 
-      // UPDATE
-
       // ENTER
       // var context = this[AUDIO];
       this[KEYBOARD] = this[KEYBOARD].enter().append("path").merge(this[KEYBOARD]).attr("class", function (d) {
@@ -13400,16 +13368,18 @@ var     HTMLElement$1 = root.HTMLElement;
       }).attr("d", drawKeys);
     }
 
-    var multiEmitter = function multiEmitter(eventType, indexName) {
+    var multiEmitter = function multiEmitter(elem, eventName, indexName) {
       return function (Ks) {
         var _ref;
 
         Ks = (_ref = []).concat.apply(_ref, [Ks]);
         Ks.forEach(function (k) {
-          var o = { detail: {} };
-          o.detail[indexName] = k;
-          emit(_this, eventType, o);
+          var e = new Event(eventName);e[indexName] = k;
+          elem.dispatchEvent(e);
         });
+        // let o = {detail:{}};
+        // o.detail[indexName] = k
+        // emit(elem,eventType,o);
       };
     };
 
@@ -13426,7 +13396,7 @@ var     HTMLElement$1 = root.HTMLElement;
       function _class2() {
         var _ref2;
 
-        var _temp, _this2, _ret;
+        var _temp, _this, _ret;
 
         classCallCheck(this, _class2);
 
@@ -13434,7 +13404,7 @@ var     HTMLElement$1 = root.HTMLElement;
           args[_key] = arguments[_key];
         }
 
-        return _ret = (_temp = (_this2 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this2), _this2.keysPress = multiEmitter.bind(_this2)(KEYPRESS, 'k'), _this2.keysRelease = multiEmitter.bind(_this2)(KEYRELEASE, 'k'), _this2.keysLight = multiEmitter.bind(_this2)(KEYLIGHT, 'k'), _this2.keysDim = multiEmitter.bind(_this2)(KEYDIM, 'k'), _this2.notesLight = multiEmitter.bind(_this2)(NOTELIGHT, 'i'), _this2.notesDim = multiEmitter.bind(_this2)(NOTEDIM, 'i'), _temp), possibleConstructorReturn(_this2, _ret);
+        return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this), _this.keysPress = multiEmitter(_this, KEYPRESS, 'index'), _this.keysRelease = multiEmitter(_this, KEYRELEASE, 'index'), _this.keysLight = multiEmitter(_this, KEYLIGHT, 'index'), _this.keysDim = multiEmitter(_this, KEYDIM, 'index'), _this.notesLight = multiEmitter(_this, NOTELIGHT, 'note'), _this.notesDim = multiEmitter(_this, NOTEDIM, 'note'), _temp), possibleConstructorReturn(_this, _ret);
       }
 
       createClass(_class2, [{
@@ -13465,7 +13435,7 @@ var     HTMLElement$1 = root.HTMLElement;
       }, {
         key: 'renderedCallback',
         value: function renderedCallback() {
-          var _this3 = this;
+          var _this2 = this;
 
           this.shadowRoot.children[0].appendChild(this[shadowSVG]);
 
@@ -13512,17 +13482,17 @@ var     HTMLElement$1 = root.HTMLElement;
 
           this[KEYBOARD].on(over, function (d) {
             var e = new Event(KEYPRESS);e.index = d.index;
-            _this3.dispatchEvent(e);
+            _this2.dispatchEvent(e);
           }).on(out, function (d) {
             var e = new Event(KEYRELEASE);e.index = d.index;
-            _this3.dispatchEvent(e);
+            _this2.dispatchEvent(e);
           });
 
           this[KEYBOARD].on(KEYPRESS, function (d, i) {
-            return soundKey(_this3, d.frequency);
+            soundKey(this, d.frequency);
           });
           this[KEYBOARD].on(KEYRELEASE, function (d, i) {
-            return dampKey(_this3);
+            dampKey(this);
           });
         }
       }], [{

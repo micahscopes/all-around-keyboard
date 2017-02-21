@@ -98,14 +98,18 @@ function setupKeyboard(){
     .attr("d", drawKeys);
 }
 
-const multiEmitter = (eventType,indexName) => (Ks) => {
-  Ks = [].concat(...[Ks]);
-  Ks.forEach((k) => {
-    let o = {detail:{}};
-    o.detail[indexName] = k
-    emit(this,eventType,o);
-  })
-} ;
+const multiEmitter = (elem,eventName,indexName) => {
+  return (Ks) => {
+    Ks = [].concat(...[Ks]);
+    Ks.forEach((k) => {
+      var e = new Event(eventName); e[indexName] = k;
+      elem.dispatchEvent(e)}
+    )
+      // let o = {detail:{}};
+      // o.detail[indexName] = k
+      // emit(elem,eventType,o);
+  } ;
+}
 
 const KEYPRESS = 'keypress';
 const KEYRELEASE = 'keyrelease';
@@ -115,12 +119,12 @@ const NOTELIGHT = 'notelight';
 const NOTEDIM = 'notedim';
 
 const KeyboardElement = customElements.define('all-around-keyboard', class extends Component {
-  keysPress = multiEmitter.bind(this)(KEYPRESS,'k');
-  keysRelease = multiEmitter.bind(this)(KEYRELEASE,'k')
-  keysLight = multiEmitter.bind(this)(KEYLIGHT,'k')
-  keysDim = multiEmitter.bind(this)(KEYDIM,'k')
-  notesLight = multiEmitter.bind(this)(NOTELIGHT,'i')
-  notesDim = multiEmitter.bind(this)(NOTEDIM,'i')
+  keysPress = multiEmitter(this,KEYPRESS,'index');
+  keysRelease = multiEmitter(this,KEYRELEASE,'index');
+  keysLight = multiEmitter(this,KEYLIGHT,'index');
+  keysDim = multiEmitter(this,KEYDIM,'index');
+  notesLight = multiEmitter(this,NOTELIGHT,'note');
+  notesDim = multiEmitter(this,NOTEDIM,'note');
 
   static get props () {
     return {
@@ -214,8 +218,8 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
         var e = new Event(KEYRELEASE); e.index = d.index;
         this.dispatchEvent(e)})
 
-    this[KEYBOARD].on(KEYPRESS, (d,i) => soundKey(this,d.frequency));
-    this[KEYBOARD].on(KEYRELEASE, (d,i) => dampKey(this));
+    this[KEYBOARD].on(KEYPRESS, function(d,i){soundKey(this,d.frequency)});
+    this[KEYBOARD].on(KEYRELEASE, function(d,i){dampKey(this)});
 
 
   }
