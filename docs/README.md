@@ -44,8 +44,8 @@ setTimeout(() => { kb.notesDim([2,4,6,7,9,11,1]) }, 4000);
 - and so much more (?)
 
 
-## [examples](examples.html):
-<iframe src="examples.html" frameborder="0" scrolling="no" width="110%" onload="this.style.height=this.contentDocument.body.scrollHeight +'px';"></iframe>
+## [examples](examples/index.html):
+<iframe src="examples/index.html" frameborder="0" scrolling="no" width="110%" onload="this.style.height=this.contentDocument.body.scrollHeight +'px';"></iframe>
 
 <style>
   #header_wrap {

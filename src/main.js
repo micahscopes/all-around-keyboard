@@ -129,8 +129,6 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
 
   static get props () {
     return {
-      // By declaring the property an attribute, we can now pass an initial value
-      // for the count as part of the HTML.
       notesInOctave: prop.number({ attribute: true, default: 12 }),
       raisedNotes: prop.array  ({ attribute: true, default: [2,4,7,9,11] }),
       octaves: prop.number({ attribute: true, default: 2 }),
@@ -154,16 +152,14 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
 
     this[shadowSVG] = document.createElementNS(namespaces.svg,"svg");
     select(this[shadowSVG]).append("g");
-
   }
 
   disconnectedCallback () {
     // Ensure we callback the parent.
     super.disconnectedCallback();
 
-    // If we didn't clean up after ourselves, we'd continue to render
-    // unnecessarily.
-    clearInterval(this[sym]);
+    // clearInterval(this[sym]);
+    // todo: cleanup more thoroughly...
   }
 
   renderCallback () {
