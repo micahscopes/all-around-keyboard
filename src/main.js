@@ -218,7 +218,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     // clearInterval(this[sym]);
     // todo: cleanup more thoroughly...
   }
-
+  
   renderCallback () {
     return [h('div'),h('style',css)];
   }
