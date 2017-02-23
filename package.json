@@ -27,7 +27,7 @@
     "kefir-observable-selector": "^0.2.1",
     "mathjs": "^3.5.3",
     "skatejs": "4.5.2",
-    "skatejs-web-components": "^5.2.1"
+    "skatejs-web-components": "micahscopes/web-components#latest-cloudydom"
   },
   "devDependencies": {
     "babel-eslint": "^7.1.1",

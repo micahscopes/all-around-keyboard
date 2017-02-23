@@ -1,0 +1,94 @@
+<title>all-around-keyboard: MIDI example</title>
+
+<script src="../all-around-keyboard.js"></script>
+<script src="webmidi.min.js"></script>
+
+
+<all-around-keyboard  synth="false" notes-in-octave="12"
+                      raised-notes="[2,5,7,9,11]"
+                      sweep=4 octaves="2"
+                      depth=200
+                      id="sending">
+</all-around-keyboard>
+
+<script>
+// midi send example
+const TRANSPOSE = 5*12;
+  WebMidi.enable(function (err) {
+    if (err) { console.log("WebMidi could not be enabled.", err); }
+    var midiOut = WebMidi.outputs[0];
+    var midiIn = WebMidi.inputs[0];
+
+    let kb = document.querySelector('all-around-keyboard#sending');
+    kb.addEventListener('keypress',function(e){
+      midiOut.playNote(e.index+TRANSPOSE);
+    });
+    kb.addEventListener('keyrelease',function(e){
+      midiOut.stopNote(e.index+TRANSPOSE);
+    });
+  });
+
+</script>
+
+<all-around-keyboard  synth=true notes-in-octave="12"
+                      raised-notes="[2,5,7,9,11]"
+                      sweep=270 octaves="2"
+                      depth=200
+                      id="receiving">
+</all-around-keyboard>
+
+<script>
+// midi receive example
+
+  WebMidi.enable(function (err) {
+    if (err) { console.log("WebMidi could not be enabled.", err); }
+    var midiIn = WebMidi.inputs[0];
+
+    let kb = document.querySelector('all-around-keyboard#receiving');
+
+    midiIn.addListener('noteon', 1, function (e) {
+        /*console.log(e);*/
+        kb.keysPress(e.note.number-TRANSPOSE);
+        kb.notesLight(e.note.number%12);
+    });
+
+    midiIn.addListener('noteoff', 1, function (e) {
+        /*console.log(e);*/
+        kb.keysRelease(e.note.number-TRANSPOSE);
+        kb.notesDim(e.note.number%12);
+    });
+  });
+
+</script>
+
+<style>
+  body {
+    margin: 0 50px;
+    background: aquamarine;
+    font-family: sans;
+    color: #4466bb;
+    text-align: center;
+  }
+
+  ul {
+      list-style: none;
+      padding: 0px;
+  }
+  li { padding: 10px; }
+  li:before
+  {
+      list-style: none;
+      content: '\266B';
+      margin: 0 1em;    /* any design */
+  }
+
+  all-around-keyboard {
+    width: 80%;
+    margin: 50px;
+    margin-top: 50px;
+    margin-bottom: 0px;
+    display: inline-block;
+    border: solid #4466bb 1px;
+    padding: 40px;
+  }
+</style>

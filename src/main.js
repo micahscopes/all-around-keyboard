@@ -30,16 +30,17 @@ all-around-keyboard {
 .key--pressed,
 .key--highlight.key--pressed.key--upper,
 .key--highlight.key--pressed.key--lower
-  { fill: yellow; }
+  { fill: deeppink; }
 
 .key--highlight {
-  stroke: rgba(0, 207, 253, 0.48);
-  stroke-width: 7px;
+  stroke: rgba(0, 91, 255, 0.73);
+  stroke-width: 5.5px;
+  // fill: url(#diagonalHatch);
   // stroke-dasharray: 8,2;
 }
 
-.key--highlight.key--lower { fill: #eee }
-.key--highlight.key--upper { fill: #444 }
+.key--highlight.key--lower { fill: rgb(215, 237, 249) }
+.key--highlight.key--upper { fill: #495b96 }
 `
 
 function setupKeyboard(){
@@ -58,10 +59,11 @@ function setupKeyboard(){
       Math.pow(outerRadius,2) - Math.pow(chordLength/2,2)) + this.depth*Math.cos(this.sweep/2)
   }
   height += SVGStrokePadding;
-
-  var svg = select(this[shadowSVG])
-      .attr("viewBox", "0 0 "+this.width+" "+height)
-      .attr("width","100%")
+  window.select = select;
+  var svg = this[shadowSVG]
+  svg.attr("viewBox","0 0 "+this.width+" "+height)
+  .attr("width","100%")
+  .attr("height","auto")
 
   var g = svg
       .select("g")
@@ -85,18 +87,39 @@ function setupKeyboard(){
             .endAngle(endAngle)
             .octaveSize(this.notesInOctave)
 
-  this[KEYBOARD] = g.selectAll("path").data(this[KEYS]);
+  var kb = g.selectAll("path").data(this[KEYS]);//,(d)=>d.index);
 
   // EXIT
-  this[KEYBOARD].exit().on(KEYPRESS,null).remove();
+  kb.exit()
+  .on(KEYPRESS,null)
+  .on(KEYRELEASE,null)
+  .on(HOVEROVER,null)
+  .on(HOVEROUT,null)
+  .remove();
 
-  // ENTER
-  // var context = this[AUDIO];
-  this[KEYBOARD] = this[KEYBOARD].enter().append("path").merge(this[KEYBOARD])
-    .attr("class", function(d) {
-      return "key key--" + (d.raised ? "upper" : "lower");
-    })
-    .attr("d", drawKeys);
+  // ENTER + UPDATE
+  kb = kb.enter().append("path").merge(kb)
+    .classed("key",true)
+    .classed("key--upper",(d)=>d.raised)
+    .classed("key--lower",(d)=>!d.raised)
+    .attr("d", drawKeys)
+
+  kb.on(HOVEROVER, (d) => {
+    var e = new Event(KEYPRESS); e.index = d.index;
+    this.dispatchEvent(e)})
+  .on(HOVEROUT, (d) => {
+    var e = new Event(KEYRELEASE); e.index = d.index;
+    this.dispatchEvent(e)})
+
+  let kbElem = this;
+
+  kb.on(KEYPRESS, function(d,i){
+    if(kbElem.synth) {soundKey(this,d.frequency)} })
+  .on(KEYRELEASE, function(d,i){
+    if(kbElem.synth) {dampKey(this)} }
+  );
+
+  this[KEYBOARD] = kb;
 }
 
 const multiEmitter = (elem,eventName,indexName) => {
@@ -118,6 +141,10 @@ const KEYLIGHT = 'keylight';
 const KEYDIM = 'keydim';
 const NOTELIGHT = 'notelight';
 const NOTEDIM = 'notedim';
+
+const HOVEROVER = ("ontouchstart" in window) ? "touchstart" : "mouseover";
+const HOVEROUT = ("ontouchstart" in window) ? "touchend" : "mouseout";
+
 
 const KeyboardElement = customElements.define('all-around-keyboard', class extends Component {
   keysPress = multiEmitter(this,KEYPRESS,'index');
@@ -142,34 +169,14 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       }),
       depth: prop.number({ attribute: true, default: 100 }),
       width: prop.number({ attribute: true, default: 500 }),
-      overlapping: prop.number({ attribute: true, default: 2.75 })
+      overlapping: prop.number({ attribute: true, default: 0.75 }),
+      synth: prop.boolean({attribute: true, default: false})
     };
   }
   connectedCallback () {
     // Ensure we call the parent.
     super.connectedCallback();
     setupLilSynth();
-
-    this[shadowSVG] = document.createElementNS(namespaces.svg,"svg");
-    select(this[shadowSVG]).append("g");
-  }
-
-  disconnectedCallback () {
-    // Ensure we callback the parent.
-    super.disconnectedCallback();
-
-    // clearInterval(this[sym]);
-    // todo: cleanup more thoroughly...
-  }
-
-  renderCallback () {
-    return [h('div'),h('style',css)];
-  }
-
-  renderedCallback() {
-    this.shadowRoot.children[0].appendChild(this[shadowSVG]);
-
-    setupKeyboard.call(this);
 
     this.addEventListener(KEYPRESS,function(e){
       this[KEYBOARD].filter((d)=>d.index == e.index)
@@ -203,23 +210,30 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       this[KEYBOARD].filter((d)=>d.note == e.note).classed("key--highlight",false)
       .dispatch(NOTEDIM);
     })
+  }
 
-    var over = ("ontouchstart" in window) ? "touchstart" : "mouseover";
-    var out = ("ontouchstart" in window) ? "touchend" : "mouseout";
+  disconnectedCallback () {
+    // Ensure we callback the parent.
+    super.disconnectedCallback();
 
-    this[KEYBOARD]
-      .on(over, (d) => {
-        var e = new Event(KEYPRESS); e.index = d.index;
-        this.dispatchEvent(e)})
-      .on(out, (d) => {
-        var e = new Event(KEYRELEASE); e.index = d.index;
-        this.dispatchEvent(e)})
+    // clearInterval(this[sym]);
+    // todo: cleanup more thoroughly...
+  }
 
-    this[KEYBOARD].on(KEYPRESS, function(d,i){soundKey(this,d.frequency)});
-    this[KEYBOARD].on(KEYRELEASE, function(d,i){dampKey(this)});
+  renderCallback () {
+    return [h('div'),h('style',css)];
+  }
 
+  renderedCallback() {
+    if(!this[shadowSVG]) {
+      this[shadowSVG] = select(this.shadowRoot.children[0]).append('svg');
+    }
 
+    this[shadowSVG].append("g")
+
+    setupKeyboard.call(this);
   }
 });
 
-export { KeyboardElement, keyLayout };
+export {  KeyboardElement, keyLayout,
+          KEYPRESS, KEYRELEASE, KEYLIGHT, KEYDIM, NOTELIGHT, NOTEDIM  };
