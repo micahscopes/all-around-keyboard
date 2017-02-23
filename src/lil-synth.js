@@ -39,7 +39,7 @@ function soundKey(key, frequency) {
   key.oscillator.connect(key.filter);
   key.oscillator2.frequency.value = frequency;
   key.oscillator2.connect(key.gain);
-  key.gain.gain.linearRampToValueAtTime(.1, now + .05);
+  key.gain.gain.linearRampToValueAtTime(.05, now + .05);
   // key.gain.gain.linearRampToValueAtTime(0.005, now + 5);
   key.oscillator.start(now+0.02);
   key.oscillator2.start(now+0.02);
