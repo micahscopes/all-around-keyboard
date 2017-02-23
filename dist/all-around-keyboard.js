@@ -14574,11 +14574,9 @@ var     HTMLElement$1 = root.HTMLElement;
       kb.exit().on(KEYPRESS, null).on(KEYRELEASE, null).on(HOVEROVER, null).on(HOVEROUT, null).remove();
 
       // ENTER + UPDATE
-      kb = kb.enter().append("path").merge(kb).classed("key", true).classed("key--upper", function (d) {
-        return d.raised;
-      }).classed("key--lower", function (d) {
-        return !d.raised;
-      }).attr("d", drawKeys);
+      kb = kb.enter().append("path").merge(kb).attr("d", drawKeys);
+      this[KEYBOARD] = kb;
+      updateKeyClasses.call(this);
 
       kb.on(HOVEROVER, function (d) {
         var e = new Event(KEYPRESS);e.index = d.index;
@@ -14599,8 +14597,20 @@ var     HTMLElement$1 = root.HTMLElement;
           dampKey(this);
         }
       });
+    }
 
-      this[KEYBOARD] = kb;
+    function updateKeyClasses() {
+      var _this2 = this;
+
+      this[KEYBOARD].classed("key", true).classed("key--upper", function (d) {
+        return d.raised;
+      }).classed("key--lower", function (d) {
+        return !d.raised;
+      }).classed("key--pressed", function (d) {
+        return _this2[pressedKeys].has(d.index);
+      }).classed("key--highlight", function (d) {
+        return _this2[litKeys].has(d.index) || _this2[litNotes].has(d.note);
+      });
     }
 
     var multiEmitter = function multiEmitter(elem, eventName, indexName) {
@@ -14624,9 +14634,12 @@ var     HTMLElement$1 = root.HTMLElement;
     var KEYDIM = 'keydim';
     var NOTELIGHT = 'notelight';
     var NOTEDIM = 'notedim';
-
     var HOVEROVER = "touchstart mouseover";
     var HOVEROUT = "touchend mouseout";
+
+    var pressedKeys = Symbol();
+    var litKeys = Symbol();
+    var litNotes = Symbol();
 
     var KeyboardElement = customElements.define('all-around-keyboard', function (_Component) {
       inherits(_class2, _Component);
@@ -14634,7 +14647,7 @@ var     HTMLElement$1 = root.HTMLElement;
       function _class2() {
         var _ref2;
 
-        var _temp, _this2, _ret;
+        var _temp, _this3, _ret;
 
         classCallCheck(this, _class2);
 
@@ -14642,7 +14655,7 @@ var     HTMLElement$1 = root.HTMLElement;
           args[_key] = arguments[_key];
         }
 
-        return _ret = (_temp = (_this2 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this2), _this2.keysPress = multiEmitter(_this2, KEYPRESS, 'index'), _this2.keysRelease = multiEmitter(_this2, KEYRELEASE, 'index'), _this2.keysLight = multiEmitter(_this2, KEYLIGHT, 'index'), _this2.keysDim = multiEmitter(_this2, KEYDIM, 'index'), _this2.notesLight = multiEmitter(_this2, NOTELIGHT, 'note'), _this2.notesDim = multiEmitter(_this2, NOTEDIM, 'note'), _temp), possibleConstructorReturn(_this2, _ret);
+        return _ret = (_temp = (_this3 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this3), _this3.keysPress = multiEmitter(_this3, KEYPRESS, 'index'), _this3.keysRelease = multiEmitter(_this3, KEYRELEASE, 'index'), _this3.keysLight = multiEmitter(_this3, KEYLIGHT, 'index'), _this3.keysDim = multiEmitter(_this3, KEYDIM, 'index'), _this3.notesLight = multiEmitter(_this3, NOTELIGHT, 'note'), _this3.notesDim = multiEmitter(_this3, NOTEDIM, 'note'), _temp), possibleConstructorReturn(_this3, _ret);
       }
 
       createClass(_class2, [{
@@ -14652,50 +14665,65 @@ var     HTMLElement$1 = root.HTMLElement;
           get(_class2.prototype.__proto__ || Object.getPrototypeOf(_class2.prototype), 'connectedCallback', this).call(this);
           setupLilSynth();
 
+          this[pressedKeys] = new Set();
+          this[litKeys] = new Set();
+          this[litNotes] = new Set();
+
           this.addEventListener(KEYPRESS, function (e) {
             this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--pressed", true).dispatch(KEYPRESS);
+
+            this[pressedKeys].add(e.index);
           });
 
           this.addEventListener(KEYRELEASE, function (e) {
             this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--pressed", false).dispatch(KEYRELEASE);
+
+            this[pressedKeys].delete(e.index);
           });
 
           this.addEventListener(KEYLIGHT, function (e) {
             this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--highlight", true).dispatch(KEYLIGHT);
+
+            this[litKeys].add(e.index);
           });
 
           this.addEventListener(KEYDIM, function (e) {
             this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--highlight", false).dispatch(KEYDIM);
+
+            this[litKeys].delete(e.index);
           });
 
           this.addEventListener(NOTELIGHT, function (e) {
             this[KEYBOARD].filter(function (d) {
               return d.note == e.note;
             }).classed("key--highlight", true).dispatch(NOTELIGHT);
+
+            this[litNotes].add(e.note);
           });
 
           this.addEventListener(NOTEDIM, function (e) {
             this[KEYBOARD].filter(function (d) {
               return d.note == e.note;
             }).classed("key--highlight", false).dispatch(NOTEDIM);
+
+            this[litNotes].delete(e.note);
           });
         }
       }, {
         key: 'disconnectedCallback',
         value: function disconnectedCallback() {
-          // Ensure we callback the parent.
           get(_class2.prototype.__proto__ || Object.getPrototypeOf(_class2.prototype), 'disconnectedCallback', this).call(this);
 
-          // clearInterval(this[sym]);
-          // todo: cleanup more thoroughly...
+          // todo: cleanup, cleanup... (everybody do your share!)
+          //        ...i.e. clearInterval(this[sym]);
         }
       }, {
         key: 'renderCallback',

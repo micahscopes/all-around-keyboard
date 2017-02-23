@@ -98,10 +98,9 @@ function setupKeyboard(){
 
   // ENTER + UPDATE
   kb = kb.enter().append("path").merge(kb)
-    .classed("key",true)
-    .classed("key--upper",(d)=>d.raised)
-    .classed("key--lower",(d)=>!d.raised)
     .attr("d", drawKeys)
+  this[KEYBOARD] = kb;
+  updateKeyClasses.call(this);
 
   kb.on(HOVEROVER, (d) => {
     var e = new Event(KEYPRESS); e.index = d.index;
@@ -117,8 +116,18 @@ function setupKeyboard(){
   .on(KEYRELEASE, function(d,i){
     if(kbElem.synth) {dampKey(this)} }
   );
+}
 
-  this[KEYBOARD] = kb;
+function updateKeyClasses(){
+  this[KEYBOARD]
+  .classed("key",true)
+  .classed("key--upper",(d)=>d.raised)
+  .classed("key--lower",(d)=>!d.raised)
+  .classed("key--pressed",(d)=> this[pressedKeys].has(d.index))
+  .classed("key--highlight",(d)=> ( this[litKeys].has(d.index) ||
+                                    this[litNotes].has(d.note)
+                                  ));
+
 }
 
 const multiEmitter = (elem,eventName,indexName) => {
@@ -140,10 +149,12 @@ const KEYLIGHT = 'keylight';
 const KEYDIM = 'keydim';
 const NOTELIGHT = 'notelight';
 const NOTEDIM = 'notedim';
-
 const HOVEROVER = "touchstart mouseover";
 const HOVEROUT = "touchend mouseout";
 
+const pressedKeys = Symbol();
+const litKeys = Symbol();
+const litNotes = Symbol();
 
 const KeyboardElement = customElements.define('all-around-keyboard', class extends Component {
   keysPress = multiEmitter(this,KEYPRESS,'index');
@@ -177,48 +188,66 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     super.connectedCallback();
     setupLilSynth();
 
+    this[pressedKeys] = new Set();
+    this[litKeys] = new Set();
+    this[litNotes] = new Set();
+
     this.addEventListener(KEYPRESS,function(e){
       this[KEYBOARD].filter((d)=>d.index == e.index)
       .classed("key--pressed",true)
       .dispatch(KEYPRESS);
+
+      this[pressedKeys].add(e.index);
     })
 
     this.addEventListener(KEYRELEASE,function(e){
-      this[KEYBOARD].filter((d)=>d.index == e.index).classed("key--pressed",false)
+      this[KEYBOARD].filter((d)=>d.index == e.index)
+      .classed("key--pressed",false)
       .dispatch(KEYRELEASE);
+
+      this[pressedKeys].delete(e.index);
     })
 
     this.addEventListener(KEYLIGHT,function(e){
       this[KEYBOARD].filter((d)=>d.index == e.index)
       .classed("key--highlight",true)
       .dispatch(KEYLIGHT);
+
+      this[litKeys].add(e.index);
     })
 
     this.addEventListener(KEYDIM,function(e){
-      this[KEYBOARD].filter((d)=>d.index == e.index).classed("key--highlight",false)
+      this[KEYBOARD].filter((d)=>d.index == e.index)
+      .classed("key--highlight",false)
       .dispatch(KEYDIM);
+
+      this[litKeys].delete(e.index);
     })
 
     this.addEventListener(NOTELIGHT,function(e){
       this[KEYBOARD].filter((d)=>d.note == e.note)
       .classed("key--highlight",true)
       .dispatch(NOTELIGHT);
+
+      this[litNotes].add(e.note);
     })
 
     this.addEventListener(NOTEDIM,function(e){
-      this[KEYBOARD].filter((d)=>d.note == e.note).classed("key--highlight",false)
+      this[KEYBOARD].filter((d)=>d.note == e.note)
+      .classed("key--highlight",false)
       .dispatch(NOTEDIM);
+
+      this[litNotes].delete(e.note);
     })
   }
 
   disconnectedCallback () {
-    // Ensure we callback the parent.
     super.disconnectedCallback();
 
-    // clearInterval(this[sym]);
-    // todo: cleanup more thoroughly...
+    // todo: cleanup, cleanup... (everybody do your share!)
+    //        ...i.e. clearInterval(this[sym]);
   }
-  
+
   renderCallback () {
     return [h('div'),h('style',css)];
   }
