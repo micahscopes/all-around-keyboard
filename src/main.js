@@ -85,6 +85,9 @@ function setupKeyboard(){
   // DATA JOIN
   this[KEYS] = keyLayout()
             .octaves(this.octaves)
+            .leftmostKey(this.leftmostKey)
+            .baseTone(this.baseTone)
+            .baseKey(this.baseKey)
             .raisedPattern(this.raisedNotes)
             .startAngle(startAngle)
             .endAngle(endAngle)
@@ -201,9 +204,9 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
   static get props () {
     return {
       notesInOctave: prop.number({ attribute: true, default: 12 }),
-      raisedNotes: prop.array  ({ attribute: true, default: [2,4,7,9,11] }),
+      raisedNotes: prop.array  ({ attribute: true, default: [1,3,6,8,10] }),
       octaves: prop.number({ attribute: true, default: 2 }),
-      sweep: prop.number({ attribute: true, default: 90,
+      sweep: prop.number({ attribute: true, default: Math.PI/2,
         deserialize (val) {
           return val*Math.PI/180;
         },
@@ -216,7 +219,10 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       overlapping: prop.number({ attribute: true, default: 0.5 }),
       pie: prop.boolean({attribute: true, default: false}),
       synth: prop.boolean({attribute: true, default: false}),
-      transitionTime: prop.number({attribute: true, default: 750})
+      transitionTime: prop.number({attribute: true, default: 750}),
+      baseTone: prop.number({attribute: true, default: 32.70375}),
+      baseKey: prop.number({attribute: true, default: 0}),
+      leftmostKey: prop.number({attribute: true, default: 4*12})
     };
   }
   connectedCallback () {

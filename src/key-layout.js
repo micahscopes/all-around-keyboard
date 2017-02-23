@@ -1,7 +1,7 @@
 import { pie } from 'd3-shape';
 
-const TwelveTones = [1,2,3,4,5,6,7,8,9,10,11,12];
-const Pentatonic = [2,4,7,9,11];
+const TwelveTones = [0,1,2,3,4,5,6,7,8,9,10,11];
+const Pentatonic = [1,3,6,8,10];
 
 function constant(x) {
   return function constant() {
@@ -16,18 +16,21 @@ export const keyLayout = function(){
   let raisedPattern = Pentatonic;
   let isRaised;
   let startAngle = constant(-Math.PI);
+  let leftmostKey = 48;
+  let baseTone = 32.70375;
+  let baseKey = 0;
   let endAngle = constant(Math.PI);
   let frequency;
   //
   function keyLayout(notes) {
     if (!notes) {
-      for (var i = 0, notes = []; i<octaveSize; i++) {notes.push(i+1)}
+      for (var i = 0, notes = []; i<octaveSize; i++) {notes.push(i)}
     }
     if (!isRaised){
       isRaised = k => raisedPattern.includes(k);
     }
     if (!frequency) {
-      frequency = (k) => 440 * Math.pow(2, (k - 9) / notes.length)
+      frequency = (k) => baseTone * Math.pow(2, (k - baseKey) / notes.length)
     }
 
     let raisedPatternOctaves = Math.ceil(Math.max.apply(Math,raisedPattern)/notes.length);
@@ -35,12 +38,12 @@ export const keyLayout = function(){
     let lowerCount = 0;
     let k,l;
     for(k=0; k<notes.length*octaves; k++){
-      if(!isRaised((k+1)%(raisedPatternOctaves*notes.length))) {lowerCount++;}
+      if(!isRaised((k)%(raisedPatternOctaves*notes.length))) {lowerCount++;}
     }
 
     if(pieStyle){
       for(k = 0; k < notes.length*octaves; k++){
-        pieKeys.push(k+1);
+        pieKeys.push(k);
       }
 
       pieKeys = pie()
@@ -55,9 +58,9 @@ export const keyLayout = function(){
 
       let key = pieStyle ? pieKeys[k] : {};
 
-      key.note = notes[k%notes.length];
-      key.index = k+1;
-      key.frequency = frequency(k+1);
+      key.index = k+leftmostKey;
+      key.note = notes[(key.index)%notes.length];
+      key.frequency = frequency(key.index);
 
       if(isRaised(key.index%(raisedPatternOctaves*notes.length))) {
         if(!pieStyle){
@@ -125,6 +128,21 @@ export const keyLayout = function(){
 
   keyLayout.octaveSize = function(_) {
     if (typeof _ === "number") { octaveSize = _ }
+    return keyLayout;
+  }
+
+  keyLayout.leftmostKey = function(_) {
+    if (typeof _ === "number") { leftmostKey = _ }
+    return keyLayout;
+  }
+
+  keyLayout.baseTone = function(_) {
+    if (typeof _ === "number") { baseTone = _ }
+    return keyLayout;
+  }
+
+  keyLayout.baseKey = function(_) {
+    if (typeof _ === "number") { baseKey = _ }
     return keyLayout;
   }
 

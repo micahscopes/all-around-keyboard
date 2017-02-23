@@ -13587,7 +13587,7 @@ var     HTMLElement$1 = root.HTMLElement;
       }
     };
 
-    var Pentatonic = [2, 4, 7, 9, 11];
+    var Pentatonic = [1, 3, 6, 8, 10];
 
     function constant(x) {
       return function constant() {
@@ -13602,13 +13602,16 @@ var     HTMLElement$1 = root.HTMLElement;
       var raisedPattern = Pentatonic;
       var isRaised = void 0;
       var startAngle = constant(-Math.PI);
+      var leftmostKey = 48;
+      var baseTone = 32.70375;
+      var baseKey = 0;
       var endAngle = constant(Math.PI);
       var frequency = void 0;
       //
       function keyLayout(notes) {
         if (!notes) {
           for (var i = 0, notes = []; i < octaveSize; i++) {
-            notes.push(i + 1);
+            notes.push(i);
           }
         }
         if (!isRaised) {
@@ -13618,7 +13621,7 @@ var     HTMLElement$1 = root.HTMLElement;
         }
         if (!frequency) {
           frequency = function frequency(k) {
-            return 440 * Math.pow(2, (k - 9) / notes.length);
+            return baseTone * Math.pow(2, (k - baseKey) / notes.length);
           };
         }
 
@@ -13631,14 +13634,14 @@ var     HTMLElement$1 = root.HTMLElement;
         var k = void 0,
             l = void 0;
         for (k = 0; k < notes.length * octaves; k++) {
-          if (!isRaised((k + 1) % (raisedPatternOctaves * notes.length))) {
+          if (!isRaised(k % (raisedPatternOctaves * notes.length))) {
             lowerCount++;
           }
         }
 
         if (pieStyle) {
           for (k = 0; k < notes.length * octaves; k++) {
-            pieKeys.push(k + 1);
+            pieKeys.push(k);
           }
 
           pieKeys = pie().startAngle(startAngle).endAngle(endAngle).sort(function (a, b) {
@@ -13651,9 +13654,9 @@ var     HTMLElement$1 = root.HTMLElement;
 
           var key = pieStyle ? pieKeys[k] : {};
 
-          key.note = notes[k % notes.length];
-          key.index = k + 1;
-          key.frequency = frequency(k + 1);
+          key.index = k + leftmostKey;
+          key.note = notes[key.index % notes.length];
+          key.frequency = frequency(key.index);
 
           if (isRaised(key.index % (raisedPatternOctaves * notes.length))) {
             if (!pieStyle) {
@@ -13734,6 +13737,27 @@ var     HTMLElement$1 = root.HTMLElement;
       keyLayout.octaveSize = function (_) {
         if (typeof _ === "number") {
           octaveSize = _;
+        }
+        return keyLayout;
+      };
+
+      keyLayout.leftmostKey = function (_) {
+        if (typeof _ === "number") {
+          leftmostKey = _;
+        }
+        return keyLayout;
+      };
+
+      keyLayout.baseTone = function (_) {
+        if (typeof _ === "number") {
+          baseTone = _;
+        }
+        return keyLayout;
+      };
+
+      keyLayout.baseKey = function (_) {
+        if (typeof _ === "number") {
+          baseKey = _;
         }
         return keyLayout;
       };
@@ -16469,44 +16493,47 @@ var     tau$2 = 2 * Math.PI;
     function soundKey(key, frequency) {
       // console.log(d,i,"hey!!!!");
       var context = window[LILSYNTH];
-      var now = context.currentTime,
-          oscillator = context.createOscillator(),
-          oscillator2 = context.createOscillator(),
-          filter = context.createBiquadFilter(),
-          gain = context.createGain();
-      oscillator.type = "sawtooth";
-      oscillator.frequency.value = frequency / 2;
-      oscillator.connect(filter);
-      oscillator2.frequency.value = frequency;
-      oscillator2.connect(gain);
-      gain.gain.value = 0;
-      gain.gain.linearRampToValueAtTime(.1, now + .05);
-      gain.gain.linearRampToValueAtTime(0.005, now + 5);
-      key.gain = gain;
-      filter.frequency.value = frequency;
-      filter.type = "bandpass";
-      filter.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(0);
-      key.oscillator = oscillator;
-      setTimeout(function () {
-        oscillator.stop();
-      }, 10000);
+      var now = context.currentTime;
+      if (!key.gain) {
+        key.gain = context.createGain();
+        key.gain.connect(context.destination);
+        key.gain.gain.linearRampToValueAtTime(0, now + .02);
+      }
+      if (!key.filter) {
+        key.filter = context.createBiquadFilter();
+        key.filter.frequency.value = frequency;
+        key.filter.type = "bandpass";
+        key.filter.connect(key.gain);
+      }
+      if (key.oscillator) {
+        key.oscillator.stop(now + 2);
+      };
+      if (key.oscillator2) {
+        key.oscillator2.stop(now + 2);
+      };
+      key.oscillator = context.createOscillator();
+      key.oscillator2 = context.createOscillator();
+      key.oscillator.type = "sawtooth";
+      key.oscillator.frequency.value = frequency / 2;
+      key.oscillator.connect(key.filter);
+      key.oscillator2.frequency.value = frequency;
+      key.oscillator2.connect(key.gain);
+      key.gain.gain.linearRampToValueAtTime(.1, now + .05);
+      // key.gain.gain.linearRampToValueAtTime(0.005, now + 5);
+      key.oscillator.start(now + 0.02);
+      key.oscillator2.start(now + 0.02);
+      key.oscillator.stop(now + 40);
+      key.oscillator2.stop(now + 40);
     }
 
     function dampKey(key) {
       var context = window[LILSYNTH];
       var now = context.currentTime;
-      var oscillator = key.oscillator;
-      var gain = key.gain;
-      if (gain) {
+      if (key.gain) {
         key.gain.gain.linearRampToValueAtTime(0, now + 0.3);
       }
-      if (oscillator) {
-        setTimeout(function () {
-          oscillator.stop();
-        }, 500);
-      }
+      if (key.oscillator) key.oscillator.stop(now + 2);
+      if (key.oscillator2) key.oscillator2.stop(now + 2);
     }
 
     var KEYBOARD = Symbol();
@@ -16552,7 +16579,7 @@ var     tau$2 = 2 * Math.PI;
       });
 
       // DATA JOIN
-      this[KEYS] = keyLayout().octaves(this.octaves).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave).pie(this.pie);
+      this[KEYS] = keyLayout().octaves(this.octaves).leftmostKey(this.leftmostKey).baseTone(this.baseTone).baseKey(this.baseKey).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave).pie(this.pie);
 
       var kbAll = g.selectAll("path").data(this[KEYS]);
       // .sort((a,b) => (!a.raised && b.raised ? -1 : 1) );
@@ -16766,9 +16793,9 @@ var     tau$2 = 2 * Math.PI;
         get: function get() {
           return {
             notesInOctave: number({ attribute: true, default: 12 }),
-            raisedNotes: array({ attribute: true, default: [2, 4, 7, 9, 11] }),
+            raisedNotes: array({ attribute: true, default: [1, 3, 6, 8, 10] }),
             octaves: number({ attribute: true, default: 2 }),
-            sweep: number({ attribute: true, default: 90,
+            sweep: number({ attribute: true, default: Math.PI / 2,
               deserialize: function deserialize(val) {
                 return val * Math.PI / 180;
               },
@@ -16781,7 +16808,10 @@ var     tau$2 = 2 * Math.PI;
             overlapping: number({ attribute: true, default: 0.5 }),
             pie: boolean({ attribute: true, default: false }),
             synth: boolean({ attribute: true, default: false }),
-            transitionTime: number({ attribute: true, default: 750 })
+            transitionTime: number({ attribute: true, default: 750 }),
+            baseTone: number({ attribute: true, default: 32.70375 }),
+            baseKey: number({ attribute: true, default: 0 }),
+            leftmostKey: number({ attribute: true, default: 4 * 12 })
           };
         }
       }]);
