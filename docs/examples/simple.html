@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<ul>
+
+<all-around-keyboard  synth notes-in-octave="12"
+                      raised-notes="[2,4,7,9,11]"
+                      sweep=4 octaves="3"
+                      depth="100" width="500">
+</all-around-keyboard>
+
+</ul>
+
+<script src="all-around-keyboard.js"></script>
+
+
+<style>
+  body {
+    margin: 0 4%;
+    background: aquamarine;
+    font-family: sans;
+    color: #4466bb;
+    text-align: center;
+  }
+
+  ul {
+      list-style: none;
+      padding: 0px;
+  }
+  li { padding: 10px; }
+  li:before
+  {
+      list-style: none;
+      content: '\266B';
+      margin: 0 1em;    /* any design */
+  }
+
+  all-around-keyboard {
+    width:94%;
+    max-width: 700px;
+    margin: 0 auto;
+    margin-top: 50px;
+    margin-bottom: 0px;
+    display: inline-block;
+    border: solid #4466bb 1px;
+    padding: 3%;
+  }
+</style>

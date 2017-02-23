@@ -2,6 +2,8 @@ import 'skatejs-web-components';
 import { define, h, Component, prop, emit } from 'skatejs';
 import { keyLayout } from './key-layout'
 import { arc } from 'd3-shape';
+import { transition } from 'd3-transition';
+import { interpolate } from 'd3-interpolate';
 import { setupLilSynth, soundKey, dampKey } from './lil-synth'
 import { select, selectAll, namespaces } from 'd3-selection';
 
@@ -76,7 +78,7 @@ function setupKeyboard(){
       })
       .outerRadius(function(d) {
         return d.raised ? outerRadius : outerRadius - elem.depth/(Math.tan(elem.overlapping*Math.PI/2)+2);
-      });
+      })
 
   // DATA JOIN
   this[KEYS] = keyLayout()
@@ -87,25 +89,48 @@ function setupKeyboard(){
             .octaveSize(this.notesInOctave)
             .pie(this.pie)
 
-  var kb = g.selectAll("path").data(this[KEYS]);//,(d)=>d.index);
+  let kbData = g.selectAll("path").data(this[KEYS]);//,(d)=>d.index);
 
   // EXIT
-  kb.exit()
+  kbData.exit()
   .on(KEYPRESS,null)
   .on(KEYRELEASE,null)
   .on(HOVEROVER,null)
   .on(HOVEROUT,null)
   .remove();
 
-  // ENTER + UPDATE
-  kb = kb.enter().append("path").merge(kb)
-    .attr("d", drawKeys)
+  // ENTER
+  let kb = kbData.enter()
+  .append("path")
+  .attr("d",function(d){
+    var k = drawKeys(d)
+    this._current = k;
+    return k;
+  })
+  .merge(kbData)
+
+
+  // UPDATE (ANIMATE)
+  transition("morph").duration(750);
+
+  function animateKeys(d) {
+    let thing = this;
+    let i = interpolate(this._current,drawKeys(d));
+    return function(t){
+      thing._current = i(t);
+      return thing._current;
+    }
+  }
+
+  kbData.transition("morph").attrTween("d", animateKeys)
+  // .each(function(d) { this._current = d; })
+
   this[KEYBOARD] = kb;
   updateKeyClasses.call(this);
 
   kb.on(HOVEROVER, (d) => {
     var e = new Event(KEYPRESS); e.index = d.index;
-    console.log(d);
+    // console.log(d);
     this.dispatchEvent(e)})
   .on(HOVEROUT, (d) => {
     var e = new Event(KEYRELEASE); e.index = d.index;
