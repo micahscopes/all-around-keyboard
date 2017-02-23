@@ -1,3 +1,5 @@
+import { pie } from 'd3-shape';
+
 const TwelveTones = [1,2,3,4,5,6,7,8,9,10,11,12];
 const Pentatonic = [2,4,7,9,11];
 
@@ -8,6 +10,7 @@ function constant(x) {
 }
 
 export const keyLayout = function(){
+  let pieStyle = false;
   let octaves = 1;
   let octaveSize = 12;
   let raisedPattern = Pentatonic;
@@ -35,24 +38,46 @@ export const keyLayout = function(){
       if(!isRaised((k+1)%(raisedPatternOctaves*notes.length))) {lowerCount++;}
     }
 
+    if(pieStyle){
+      for(k = 0; k < notes.length*octaves; k++){
+        allKeys.push(k+1);
+      }
+
+      allKeys = pie()
+      .startAngle(startAngle)
+      .endAngle(endAngle)
+      .sort(function(a, b) { return a - b; })
+      .value(1)(allKeys);
+    }
+
     for(k = 0, l = 0; k < notes.length*octaves; k++) {
       let diffAngle = (endAngle(k)-startAngle(k))/lowerCount;
-      let key = { note: notes[k%notes.length], index: k+1 }
-      key.frequency = frequency(key.index)
+
+      let key = pieStyle ? allKeys[k] : {};
+
+      key.note = notes[k%notes.length];
+      key.index = k+1;
+      key.frequency = frequency(k+1);
+
       if(isRaised(key.index%(raisedPatternOctaves*notes.length))) {
-        key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
-        key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
+        if(!pieStyle){
+          key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
+          key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
+        }
         key.raised = true;
         raisedKeys.push(key);
       } else {
-        key.startAngle = startAngle(k) + l*diffAngle;
-        key.endAngle = key.startAngle + diffAngle;
+        if(!pieStyle){
+          key.startAngle = startAngle(k) + l*diffAngle;
+          key.endAngle = key.startAngle + diffAngle;
+        }
         key.raised = false;
         lowerKeys.push(key);
         l++;
       }
     }
-    return lowerKeys.concat(raisedKeys);
+    allKeys = lowerKeys.concat(raisedKeys);
+    return allKeys;
   }
 
   // for (var i = 0, n = numTones*octaves; i < n; ++i) {
@@ -100,6 +125,12 @@ export const keyLayout = function(){
     if (typeof _ === "number") { octaveSize = _ }
     return keyLayout;
   }
+
+  keyLayout.pie = function(_) {
+    if (typeof _ === "boolean") { pieStyle = _ }
+    return keyLayout;
+  }
+
 
   return keyLayout;
 }

@@ -12488,136 +12488,6 @@ var     HTMLElement$1 = root.HTMLElement;
 
     var h = builder();
 
-    var Pentatonic = [2, 4, 7, 9, 11];
-
-    function constant(x) {
-      return function constant() {
-        return x;
-      };
-    }
-
-    var keyLayout = function keyLayout() {
-      var octaves = 1;
-      var octaveSize = 12;
-      var raisedPattern = Pentatonic;
-      var isRaised = void 0;
-      var startAngle = constant(-Math.PI);
-      var endAngle = constant(Math.PI);
-      var frequency = void 0;
-      //
-      function keyLayout(notes) {
-        if (!notes) {
-          for (var i = 0, notes = []; i < octaveSize; i++) {
-            notes.push(i + 1);
-          }
-        }
-        if (!isRaised) {
-          isRaised = function isRaised(k) {
-            return raisedPattern.includes(k);
-          };
-        }
-        if (!frequency) {
-          frequency = function frequency(k) {
-            return 440 * Math.pow(2, (k - 9) / notes.length);
-          };
-        }
-
-        var raisedPatternOctaves = Math.ceil(Math.max.apply(Math, raisedPattern) / notes.length);
-        var allKeys = [],
-            raisedKeys = [],
-            lowerKeys = [];
-        var lowerCount = 0;
-        var k = void 0,
-            l = void 0;
-        for (k = 0; k < notes.length * octaves; k++) {
-          if (!isRaised((k + 1) % (raisedPatternOctaves * notes.length))) {
-            lowerCount++;
-          }
-        }
-
-        for (k = 0, l = 0; k < notes.length * octaves; k++) {
-          var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
-          var key = { note: notes[k % notes.length], index: k + 1 };
-          key.frequency = frequency(key.index);
-          if (isRaised(key.index % (raisedPatternOctaves * notes.length))) {
-            key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
-            key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
-            key.raised = true;
-            raisedKeys.push(key);
-          } else {
-            key.startAngle = startAngle(k) + l * diffAngle;
-            key.endAngle = key.startAngle + diffAngle;
-            key.raised = false;
-            lowerKeys.push(key);
-            l++;
-          }
-        }
-        return lowerKeys.concat(raisedKeys);
-      }
-
-      // for (var i = 0, n = numTones*octaves; i < n; ++i) {
-      //   keys[i].frequency = 440 * Math.pow(2, (i - 9) / numTones); // 0 is middle C
-      // }
-
-
-      //  let isRaised = k => raisedPattern.includes(k);
-      keyLayout.isRaised = function (_) {
-        if (arguments.length) {
-          isRaised = typeof _ === "function" ? _ : constant(_);
-        }
-        return keyLayout;
-      };
-
-      // let raisedPattern = Pentatonic;
-      keyLayout.raisedPattern = function (_) {
-        if (_ && _.length) {
-          raisedPattern = _;
-        }
-        return keyLayout;
-      };
-
-      //  let octaves = 1;
-      keyLayout.octaves = function (_) {
-        if (typeof _ === "number") {
-          octaves = _;
-        }
-        return keyLayout;
-      };
-
-      // let startAngle = constant(-Math.PI);
-      keyLayout.startAngle = function (_) {
-        if (arguments.length) {
-          startAngle = typeof _ === "function" ? _ : constant(_);
-        }
-        return keyLayout;
-      };
-
-      // let frequency;
-      keyLayout.frequency = function (_) {
-        if (arguments.length) {
-          frequency = typeof _ === "function" ? _ : constant(_);
-        }
-        return keyLayout;
-      };
-
-      // let endAngle = constant(Math.PI);
-      keyLayout.endAngle = function (_) {
-        if (arguments.length) {
-          endAngle = typeof _ === "function" ? _ : constant(_);
-        }
-        return keyLayout;
-      };
-
-      keyLayout.octaveSize = function (_) {
-        if (typeof _ === "number") {
-          octaveSize = _;
-        }
-        return keyLayout;
-      };
-
-      return keyLayout;
-    };
-
     var pi = Math.PI;
     var tau = 2 * pi;
     var epsilon = 1e-6;
@@ -13013,6 +12883,92 @@ var     HTMLElement$1 = root.HTMLElement;
       };
 
       return arc;
+    }
+
+    function descending (a, b) {
+      return b < a ? -1 : b > a ? 1 : b >= a ? 0 : NaN;
+    }
+
+    function identity (d) {
+      return d;
+    }
+
+    function pie () {
+      var value = identity,
+          sortValues = descending,
+          sort = null,
+          startAngle = constant$1(0),
+          endAngle = constant$1(tau$1),
+          padAngle = constant$1(0);
+
+      function pie(data) {
+        var i,
+            n = data.length,
+            j,
+            k,
+            sum = 0,
+            index = new Array(n),
+            arcs = new Array(n),
+            a0 = +startAngle.apply(this, arguments),
+            da = Math.min(tau$1, Math.max(-tau$1, endAngle.apply(this, arguments) - a0)),
+            a1,
+            p = Math.min(Math.abs(da) / n, padAngle.apply(this, arguments)),
+            pa = p * (da < 0 ? -1 : 1),
+            v;
+
+        for (i = 0; i < n; ++i) {
+          if ((v = arcs[index[i] = i] = +value(data[i], i, data)) > 0) {
+            sum += v;
+          }
+        }
+
+        // Optionally sort the arcs by previously-computed values or by data.
+        if (sortValues != null) index.sort(function (i, j) {
+          return sortValues(arcs[i], arcs[j]);
+        });else if (sort != null) index.sort(function (i, j) {
+          return sort(data[i], data[j]);
+        });
+
+        // Compute the arcs! They are stored in the original data's order.
+        for (i = 0, k = sum ? (da - n * pa) / sum : 0; i < n; ++i, a0 = a1) {
+          j = index[i], v = arcs[j], a1 = a0 + (v > 0 ? v * k : 0) + pa, arcs[j] = {
+            data: data[j],
+            index: i,
+            value: v,
+            startAngle: a0,
+            endAngle: a1,
+            padAngle: p
+          };
+        }
+
+        return arcs;
+      }
+
+      pie.value = function (_) {
+        return arguments.length ? (value = typeof _ === "function" ? _ : constant$1(+_), pie) : value;
+      };
+
+      pie.sortValues = function (_) {
+        return arguments.length ? (sortValues = _, sort = null, pie) : sortValues;
+      };
+
+      pie.sort = function (_) {
+        return arguments.length ? (sort = _, sortValues = null, pie) : sort;
+      };
+
+      pie.startAngle = function (_) {
+        return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant$1(+_), pie) : startAngle;
+      };
+
+      pie.endAngle = function (_) {
+        return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant$1(+_), pie) : endAngle;
+      };
+
+      pie.padAngle = function (_) {
+        return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant$1(+_), pie) : padAngle;
+      };
+
+      return pie;
     }
 
     var kr = Math.sin(pi$1 / 10) / Math.sin(7 * pi$1 / 10);
@@ -13629,6 +13585,164 @@ var     HTMLElement$1 = root.HTMLElement;
       bezierCurveTo: function bezierCurveTo(x1, y1, x2, y2, x, y) {
         this._context.bezierCurveTo(y1, x1, y2, x2, y, x);
       }
+    };
+
+    var Pentatonic = [2, 4, 7, 9, 11];
+
+    function constant(x) {
+      return function constant() {
+        return x;
+      };
+    }
+
+    var keyLayout = function keyLayout() {
+      var pieStyle = false;
+      var octaves = 1;
+      var octaveSize = 12;
+      var raisedPattern = Pentatonic;
+      var isRaised = void 0;
+      var startAngle = constant(-Math.PI);
+      var endAngle = constant(Math.PI);
+      var frequency = void 0;
+      //
+      function keyLayout(notes) {
+        if (!notes) {
+          for (var i = 0, notes = []; i < octaveSize; i++) {
+            notes.push(i + 1);
+          }
+        }
+        if (!isRaised) {
+          isRaised = function isRaised(k) {
+            return raisedPattern.includes(k);
+          };
+        }
+        if (!frequency) {
+          frequency = function frequency(k) {
+            return 440 * Math.pow(2, (k - 9) / notes.length);
+          };
+        }
+
+        var raisedPatternOctaves = Math.ceil(Math.max.apply(Math, raisedPattern) / notes.length);
+        var allKeys = [],
+            raisedKeys = [],
+            lowerKeys = [];
+        var lowerCount = 0;
+        var k = void 0,
+            l = void 0;
+        for (k = 0; k < notes.length * octaves; k++) {
+          if (!isRaised((k + 1) % (raisedPatternOctaves * notes.length))) {
+            lowerCount++;
+          }
+        }
+
+        if (pieStyle) {
+          for (k = 0; k < notes.length * octaves; k++) {
+            allKeys.push(k + 1);
+          }
+
+          allKeys = pie().startAngle(startAngle).endAngle(endAngle).sort(function (a, b) {
+            return a - b;
+          }).value(1)(allKeys);
+        }
+
+        for (k = 0, l = 0; k < notes.length * octaves; k++) {
+          var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
+
+          var key = pieStyle ? allKeys[k] : {};
+
+          key.note = notes[k % notes.length];
+          key.index = k + 1;
+          key.frequency = frequency(k + 1);
+
+          if (isRaised(key.index % (raisedPatternOctaves * notes.length))) {
+            if (!pieStyle) {
+              key.startAngle = startAngle(k) + diffAngle * (l - .5 + 0.15);
+              key.endAngle = startAngle(k) + diffAngle * (l + 0.5 - 0.15);
+            }
+            key.raised = true;
+            raisedKeys.push(key);
+          } else {
+            if (!pieStyle) {
+              key.startAngle = startAngle(k) + l * diffAngle;
+              key.endAngle = key.startAngle + diffAngle;
+            }
+            key.raised = false;
+            lowerKeys.push(key);
+            l++;
+          }
+        }
+        allKeys = lowerKeys.concat(raisedKeys);
+        return allKeys;
+      }
+
+      // for (var i = 0, n = numTones*octaves; i < n; ++i) {
+      //   keys[i].frequency = 440 * Math.pow(2, (i - 9) / numTones); // 0 is middle C
+      // }
+
+
+      //  let isRaised = k => raisedPattern.includes(k);
+      keyLayout.isRaised = function (_) {
+        if (arguments.length) {
+          isRaised = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let raisedPattern = Pentatonic;
+      keyLayout.raisedPattern = function (_) {
+        if (_ && _.length) {
+          raisedPattern = _;
+        }
+        return keyLayout;
+      };
+
+      //  let octaves = 1;
+      keyLayout.octaves = function (_) {
+        if (typeof _ === "number") {
+          octaves = _;
+        }
+        return keyLayout;
+      };
+
+      // let startAngle = constant(-Math.PI);
+      keyLayout.startAngle = function (_) {
+        if (arguments.length) {
+          startAngle = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let frequency;
+      keyLayout.frequency = function (_) {
+        if (arguments.length) {
+          frequency = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      // let endAngle = constant(Math.PI);
+      keyLayout.endAngle = function (_) {
+        if (arguments.length) {
+          endAngle = typeof _ === "function" ? _ : constant(_);
+        }
+        return keyLayout;
+      };
+
+      keyLayout.octaveSize = function (_) {
+        if (typeof _ === "number") {
+          octaveSize = _;
+        }
+        return keyLayout;
+      };
+
+      keyLayout.pie = function (_) {
+        if (typeof _ === "boolean") {
+          pieStyle = _;
+        }
+        return keyLayout;
+      };
+
+      return keyLayout;
     };
 
     var LILSYNTH = Symbol();
@@ -14566,7 +14680,7 @@ var     HTMLElement$1 = root.HTMLElement;
       });
 
       // DATA JOIN
-      this[KEYS] = keyLayout().octaves(this.octaves).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave);
+      this[KEYS] = keyLayout().octaves(this.octaves).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave).pie(this.pie);
 
       var kb = g.selectAll("path").data(this[KEYS]); //,(d)=>d.index);
 
@@ -14580,6 +14694,7 @@ var     HTMLElement$1 = root.HTMLElement;
 
       kb.on(HOVEROVER, function (d) {
         var e = new Event(KEYPRESS);e.index = d.index;
+        console.log(d);
         _this.dispatchEvent(e);
       }).on(HOVEROUT, function (d) {
         var e = new Event(KEYRELEASE);e.index = d.index;
@@ -14759,7 +14874,8 @@ var     HTMLElement$1 = root.HTMLElement;
             }),
             depth: number({ attribute: true, default: 100 }),
             width: number({ attribute: true, default: 500 }),
-            overlapping: number({ attribute: true, default: 0.75 }),
+            overlapping: number({ attribute: true, default: 0.5 }),
+            pie: boolean({ attribute: true, default: false }),
             synth: boolean({ attribute: true, default: false })
           };
         }

@@ -1,7 +1,7 @@
 import 'skatejs-web-components';
 import { define, h, Component, prop, emit } from 'skatejs';
 import { keyLayout } from './key-layout'
-import { arc, pie } from 'd3-shape';
+import { arc } from 'd3-shape';
 import { setupLilSynth, soundKey, dampKey } from './lil-synth'
 import { select, selectAll, namespaces } from 'd3-selection';
 
@@ -85,6 +85,7 @@ function setupKeyboard(){
             .startAngle(startAngle)
             .endAngle(endAngle)
             .octaveSize(this.notesInOctave)
+            .pie(this.pie)
 
   var kb = g.selectAll("path").data(this[KEYS]);//,(d)=>d.index);
 
@@ -104,6 +105,7 @@ function setupKeyboard(){
 
   kb.on(HOVEROVER, (d) => {
     var e = new Event(KEYPRESS); e.index = d.index;
+    console.log(d);
     this.dispatchEvent(e)})
   .on(HOVEROUT, (d) => {
     var e = new Event(KEYRELEASE); e.index = d.index;
@@ -179,7 +181,8 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       }),
       depth: prop.number({ attribute: true, default: 100 }),
       width: prop.number({ attribute: true, default: 500 }),
-      overlapping: prop.number({ attribute: true, default: 0.75 }),
+      overlapping: prop.number({ attribute: true, default: 0.5 }),
+      pie: prop.boolean({attribute: true, default: false}),
       synth: prop.boolean({attribute: true, default: false})
     };
   }
