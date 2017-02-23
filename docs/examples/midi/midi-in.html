@@ -1,0 +1,71 @@
+<title>all-around-keyboard: MIDI example</title>
+
+<script src="../all-around-keyboard.js"></script>
+<script src="webmidi.min.js"></script>
+<h2>MIDI in</h2>
+
+<script>
+// midi receive example
+
+  this.TRANSPOSE = -24;
+  var keyboards = {};
+  for(var ch=1; ch<=16; ch++){
+    let kb = document.createElement("all-around-keyboard");
+    kb.leftmostKey=0;
+    kb.synth = true; kb.octaves = 6;
+    kb.sweep = Math.PI*4/3;
+    document.body.appendChild(kb);
+    keyboards[ch] = kb;
+  }
+
+  WebMidi.enable(function (err) {
+    if (err) { console.log("WebMidi could not be enabled.", err); }
+    var midiIn = WebMidi.inputs[0];
+
+    let kb = document.querySelector('all-around-keyboard#receiving');
+
+    midiIn.addListener('noteon', 'all', function (e) {
+        /*console.log(e);*/
+        keyboards[e.channel].keysPress(e.note.number+TRANSPOSE);
+        keyboards[e.channel].notesLight(e.note.number%12);
+    });
+
+    midiIn.addListener('noteoff', 'all', function (e) {
+        keyboards[e.channel].keysRelease(e.note.number+TRANSPOSE);
+        keyboards[e.channel].notesDim(e.note.number%12);
+    });
+  });
+
+</script>
+
+<style>
+  body {
+    margin: 0 50px;
+    background: aquamarine;
+    font-family: sans;
+    color: #4466bb;
+    text-align: center;
+  }
+
+  ul {
+      list-style: none;
+      padding: 0px;
+  }
+  li { padding: 10px; }
+  li:before
+  {
+      list-style: none;
+      content: '\266B';
+      margin: 0 1em;    /* any design */
+  }
+
+  all-around-keyboard {
+    width: 80%;
+    margin: 50px;
+    margin-top: 50px;
+    margin-bottom: 0px;
+    display: inline-block;
+    border: solid #4466bb 1px;
+    padding: 40px;
+  }
+</style>
