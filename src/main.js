@@ -200,6 +200,9 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
   keysDim = multiEmitter(this,KEYDIM,'index');
   notesLight = multiEmitter(this,NOTELIGHT,'note');
   notesDim = multiEmitter(this,NOTEDIM,'note');
+  panic = function(){
+    this.keysRelease(Array(this[pressedKeys]))
+  }
 
   static get props () {
     return {
