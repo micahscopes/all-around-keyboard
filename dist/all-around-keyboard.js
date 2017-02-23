@@ -16592,7 +16592,7 @@ var     tau$2 = 2 * Math.PI;
       });
 
       // EXIT
-      kbAll.exit().on(KEYPRESS, null).on(KEYRELEASE, null).on(HOVEROVER, null).on(HOVEROUT, null).remove();
+      kbAll.exit().on(KEYPRESS, null).on(HOVEROVER, null).remove();
 
       var kb = kbAll.enter().append("path").attr("d", function (d) {
         var k = drawKeys(d);
@@ -16700,7 +16700,7 @@ var     tau$2 = 2 * Math.PI;
         }
 
         return _ret = (_temp = (_this3 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this3), _this3.keysPress = multiEmitter(_this3, KEYPRESS, 'index'), _this3.keysRelease = multiEmitter(_this3, KEYRELEASE, 'index'), _this3.keysLight = multiEmitter(_this3, KEYLIGHT, 'index'), _this3.keysDim = multiEmitter(_this3, KEYDIM, 'index'), _this3.notesLight = multiEmitter(_this3, NOTELIGHT, 'note'), _this3.notesDim = multiEmitter(_this3, NOTEDIM, 'note'), _this3.panic = function () {
-          this.keysRelease(Array(this[pressedKeys]));
+          this.keysRelease(this[pressedKeys]);
         }, _temp), possibleConstructorReturn(_this3, _ret);
       }
 

@@ -103,9 +103,7 @@ function setupKeyboard(){
   // EXIT
   kbAll.exit()
   .on(KEYPRESS,null)
-  .on(KEYRELEASE,null)
   .on(HOVEROVER,null)
-  .on(HOVEROUT,null)
   .remove();
 
   let kb = kbAll.enter()
@@ -152,7 +150,7 @@ function setupKeyboard(){
     if(elem.synth) {soundKey(this,d.frequency)} })
   .on(KEYRELEASE, function(d,i){
     if(elem.synth) {dampKey(this)} }
-  );
+  )
 }
 
 function updateKeyClasses(){
@@ -201,7 +199,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
   notesLight = multiEmitter(this,NOTELIGHT,'note');
   notesDim = multiEmitter(this,NOTEDIM,'note');
   panic = function(){
-    this.keysRelease(Array(this[pressedKeys]))
+    this.keysRelease(this[pressedKeys])
   }
 
   static get props () {
