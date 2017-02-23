@@ -1,0 +1,113 @@
+<title>all-around-keyboard: animated transitions</title>
+
+<script src="../../lib/all-around-keyboard.min.js"></script>
+<script src="https://d3js.org/d3-color.v1.min.js"></script>
+<script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+<script src="https://d3js.org/d3-ease.v1.min.js"></script>
+<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+<script src="https://d3js.org/d3-selection.v1.min.js"></script>
+<script src="https://d3js.org/d3-timer.v1.min.js"></script>
+<script src="https://d3js.org/d3-transition.v1.min.js"></script>
+
+<h2> MIDI out </h2>
+<all-around-keyboard  synth notes-in-octave="12"
+                      raised-notes="[1,3,6,8,10]"
+                      transition-time="200" id="kb">
+</all-around-keyboard>
+
+<script>
+var d = 1000;
+
+
+var kb = d3.select('all-around-keyboard')
+function release(){
+  console.log("release",this)
+  kb.node().panic();
+}
+
+var rt = d3.transition().on('end',release);
+
+kb.transition().delay(d).on('end',release)
+.attr("sweep",360)
+.transition().delay(d).on('end',release)
+.attr("depth",200)
+.transition().delay(d).on('end',release)
+.attr("octaves",1)
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[1,4,6,8,10]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[1,4,6,8,11]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[1,4,6,9,11]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[2,4,6,9,11]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[2,4,6,9,0]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[2,4,7,9,0]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[2,5,7,9,0]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[3,5,7,9,0]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[3,5,7,10,0]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[3,5,7,10,1]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[3,5,8,10,1]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[3,5,8,11,1]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[3,6,8,11,1]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[4,6,8,11,1]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[4,6,9,11,1]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[4,6,9,11,2]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[4,7,9,11,2]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[4,7,9,0,2]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[4,7,10,0,2]")
+.transition().delay(d).on('end',release)
+.attr("raised-notes","[5,7,10,0,2]")
+
+
+
+
+
+</script>
+
+<style>
+  body {
+    margin: 0 50px;
+    background: aquamarine;
+    font-family: sans;
+    color: #4466bb;
+    text-align: center;
+  }
+
+  ul {
+      list-style: none;
+      padding: 0px;
+  }
+  li { padding: 10px; }
+  li:before
+  {
+      list-style: none;
+      content: '\266B';
+      margin: 0 1em;    /* any design */
+  }
+
+  all-around-keyboard {
+    width: 80%;
+    margin: 50px;
+    margin-top: 50px;
+    margin-bottom: 0px;
+    display: inline-block;
+    border: solid #4466bb 1px;
+    padding: 40px;
+  }
+</style>
