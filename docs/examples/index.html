@@ -40,18 +40,17 @@
 
 
 <all-around-keyboard  pie synth notes-in-octave="12"
+                      sweep=360 octaves="2"
+                      depth="150" width="500"
+                      overlapping=1 >
+</all-around-keyboard>
+<li>1 octave lifebouy keyboard</li>
+
+<all-around-keyboard  pie synth notes-in-octave="12"
                       sweep=270 octaves="1"
                       depth="200" width="500">
 </all-around-keyboard>
-<li>1 octave pie keyboard</li>
-
-<all-around-keyboard  pie synth notes-in-octave="12"
-                      sweep=360 octaves="2"
-                      depth="200" width="500"
-                      overlapping=1 >
-</all-around-keyboard>
-<li>2 octave split pie keyboard</li>
-
+<li>2 octave alien spaceship control panel keyboard</li>
 
 <all-around-keyboard  synth notes-in-octave="12"
                       raised-notes="[1,4,6,8,10]"
@@ -63,23 +62,37 @@
 
 <all-around-keyboard  synth notes-in-octave="16"
                       raised-notes="[1,3,5,8,10,12,14]"
-                      sweep=270 octaves="2"
+                      sweep=220 octaves="2" leftmost-key="32"
                       depth="220" width="500">
 </all-around-keyboard>
 <li>16-tone keyboard with a maximally even scale on the white notes</li>
 
 
-<all-around-keyboard  synth notes-in-octave="31"
+<all-around-keyboard id="lit" synth notes-in-octave="31"
                       raised-notes="[1,3,5,10,12,14,18,22,24,27,29]"
                       sweep=270 octaves="1"
-                      depth="220" width="500">
+                      depth="220" width="500"
+                      leftmost-key="93">
 </all-around-keyboard>
+
+<script>
+var litKB = document.getElementById("lit");
+var litNotes = []
+function itIsLit(){
+  litKB.notesDim(litNotes);
+  litNotes = [];
+  for(var i=0; i<4; i++) { litNotes.push(Math.floor(Math.random()*31)) }
+  console.log("lighting ", litNotes);
+  litKB.notesLight(litNotes);
+}
+setInterval(itIsLit,1200);
+</script>
 
 <li>who knows?</li>
 
 </ul>
 
-<script src="all-around-keyboard.js"></script>
+<script src="../lib/all-around-keyboard.min.js"></script>
 
 
 <style>

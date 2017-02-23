@@ -222,7 +222,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       transitionTime: prop.number({attribute: true, default: 750}),
       baseTone: prop.number({attribute: true, default: 32.70375}),
       baseKey: prop.number({attribute: true, default: 0}),
-      leftmostKey: prop.number({attribute: true, default: 4*12})
+      leftmostKey: prop.number({attribute: true, default: 3*12})
     };
   }
   connectedCallback () {

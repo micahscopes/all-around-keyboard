@@ -41,9 +41,9 @@ setTimeout(() => { kb.notesDim([2,4,6,7,9,11,1]) }, 4000);
 - note and x/y events
 - multitouch support
 - synthesis
-  1. enable/disable
+  1. switch to [this](https://github.com/KatsuomiK/synthesis.js)
   2. gain
-  3. integrate with [this badass dx7 emulator](https://github.com/mmontag/dx7-synth-js)
+  3. integrate with [this dx7 emulator](https://github.com/mmontag/dx7-synth-js)
 - more styles
 - fix bugs
 - and so much more (?)

@@ -16811,7 +16811,7 @@ var     tau$2 = 2 * Math.PI;
             transitionTime: number({ attribute: true, default: 750 }),
             baseTone: number({ attribute: true, default: 32.70375 }),
             baseKey: number({ attribute: true, default: 0 }),
-            leftmostKey: number({ attribute: true, default: 4 * 12 })
+            leftmostKey: number({ attribute: true, default: 3 * 12 })
           };
         }
       }]);
