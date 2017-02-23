@@ -228,9 +228,10 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       this[shadowSVG] = select(this.shadowRoot.children[0])
       .append("svg")
       .attr("width","100%");
-    }
 
-    this[shadowSVG].append("g")
+      this[shadowSVG].append("g");
+    }
+    this.shadowRoot.children[0].appendChild(this[shadowSVG].node());
 
     setupKeyboard.call(this);
   }
