@@ -13,7 +13,7 @@ const KEYS = Symbol();
 const currentKeyPositions = Symbol();
 const shadowSVG = Symbol();
 
-const SVGStrokePadding = 5;
+const SVGStrokePadding = 15;
 
 const css = `
 all-around-keyboard {
@@ -143,7 +143,7 @@ function setupKeyboard(){
   .classed("key--upper",(d)=>d.raised)
   .classed("key--lower",(d)=>!d.raised)
   .filter((d)=>d.raised).raise()
-  
+
   kb.on(HOVEROVER, (d) => {
     var e = new Event(KEYPRESS); e.index = d.index;
     // console.log(d);

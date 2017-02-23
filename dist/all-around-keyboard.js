@@ -16542,7 +16542,7 @@ var     tau$2 = 2 * Math.PI;
     var currentKeyPositions = Symbol();
     var shadowSVG = Symbol();
 
-    var SVGStrokePadding = 5;
+    var SVGStrokePadding = 12;
 
     var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n  // fill: url(#diagonalHatch);\n  // stroke-dasharray: 8,2;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n';
 
