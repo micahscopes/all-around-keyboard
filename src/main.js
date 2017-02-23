@@ -72,10 +72,10 @@ function setupKeyboard(){
       .cornerRadius(2)
       // .padRadius(function(d) { return d.sharp ? outerRadius : outerRadius - depth; })
       .innerRadius(function(d) {
-        return d.raised ? innerRadius + elem.depth/(elem.overlapping+2): innerRadius;
+        return d.raised ? innerRadius + elem.depth/(Math.tan(elem.overlapping*Math.PI/2)+2): innerRadius;
       })
       .outerRadius(function(d) {
-        return d.raised ? outerRadius : outerRadius - elem.depth/(elem.overlapping+2);
+        return d.raised ? outerRadius : outerRadius - elem.depth/(Math.tan(elem.overlapping*Math.PI/2)+2);
       });
 
   // DATA JOIN
