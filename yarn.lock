@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@webcomponents/custom-elements@https://github.com/webcomponents/custom-elements/archive/36451e1.tar.gz":
-  version "1.0.0-alpha.3"
-  resolved "https://github.com/webcomponents/custom-elements/archive/36451e1.tar.gz#cd5c86c032a375a5416e00a13e84455c2d716df0"
+"@webcomponents/custom-elements@webcomponents/custom-elements":
+  version "1.0.0-alpha.4"
+  resolved "https://codeload.github.com/webcomponents/custom-elements/tar.gz/1b2ad174411aab7cccb8231214399bb033dd5d49"
 
 "@webcomponents/shadycss@https://github.com/webcomponents/shadycss/archive/bea402d.tar.gz":
   version "0.0.1"
@@ -1425,6 +1425,14 @@ graceful-fs@^4.1.2:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/graceful-readlink/-/graceful-readlink-1.0.1.tgz#4cafad76bc62f02fa039b2f94e9a3dd3a391a725"
 
+hammer-timejs@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/hammer-timejs/-/hammer-timejs-1.1.0.tgz#fc07ec1e4012228fe51b6a51218ec12661a32a42"
+
+hammerjs@^2.0.8:
+  version "2.0.8"
+  resolved "https://registry.yarnpkg.com/hammerjs/-/hammerjs-2.0.8.tgz#04ef77862cff2bb79d30f7692095930222bf60f1"
+
 har-validator@~2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/har-validator/-/har-validator-2.0.6.tgz#cdcbc08188265ad119b6a5a7c8ab70eecfb5d27d"
@@ -1767,7 +1775,7 @@ kefir-observable-selector@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/kefir-observable-selector/-/kefir-observable-selector-0.2.1.tgz#c35603d22ba29f95ab691c4188cf29d672ccd8bc"
 
-kefir@^3.5.2:
+kefir@^3.7.1:
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/kefir/-/kefir-3.7.1.tgz#e77f56feeec46f4a2ee2997e5c3226e904877b5b"
   dependencies:
@@ -2466,11 +2474,11 @@ signal-exit@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
 
-skatejs-web-components@micahscopes/web-components#latest-cloudydom:
-  version ""
-  resolved "https://codeload.github.com/micahscopes/web-components/tar.gz/7b74080468abdd6e96229524af67897c21c084b7"
+skatejs-web-components@micahscopes/web-components#newer-dependencies:
+  version "0.0.0"
+  resolved "https://codeload.github.com/micahscopes/web-components/tar.gz/201aef97c2bf0fb8cf505b1184f128fcc7c36d96"
   dependencies:
-    "@webcomponents/custom-elements" "https://github.com/webcomponents/custom-elements/archive/36451e1.tar.gz"
+    "@webcomponents/custom-elements" webcomponents/custom-elements
     "@webcomponents/shadycss" "https://github.com/webcomponents/shadycss/archive/bea402d.tar.gz"
     "@webcomponents/template" "https://github.com/webcomponents/template/archive/60d743e.tar.gz"
     array.from "^1.0.3"
@@ -2604,7 +2612,7 @@ supports-color@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
 
-symbol-observable@^1.0.1:
+symbol-observable@^1.0.1, symbol-observable@^1.0.2:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/symbol-observable/-/symbol-observable-1.0.4.tgz#29bf615d4aa7121bdd898b22d4b3f9bc4e2aa03d"
 
@@ -2788,6 +2796,12 @@ write@^0.2.1:
   resolved "https://registry.yarnpkg.com/write/-/write-0.2.1.tgz#5fc03828e264cea3fe91455476f7a3c566cb0757"
   dependencies:
     mkdirp "^0.5.1"
+
+xstream@^10.2.0:
+  version "10.2.0"
+  resolved "https://registry.yarnpkg.com/xstream/-/xstream-10.2.0.tgz#c121f3f67b34a921f473dd2b596f01ab4646f957"
+  dependencies:
+    symbol-observable "^1.0.2"
 
 xtend@^4.0.0:
   version "4.0.1"

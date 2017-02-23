@@ -61,9 +61,8 @@ function setupKeyboard(){
   height += SVGStrokePadding;
   window.select = select;
   var svg = this[shadowSVG]
+
   svg.attr("viewBox","0 0 "+this.width+" "+height)
-  .attr("width","100%")
-  .attr("height","auto")
 
   var g = svg
       .select("g")
@@ -142,8 +141,8 @@ const KEYDIM = 'keydim';
 const NOTELIGHT = 'notelight';
 const NOTEDIM = 'notedim';
 
-const HOVEROVER = ("ontouchstart" in window) ? "touchstart" : "mouseover";
-const HOVEROUT = ("ontouchstart" in window) ? "touchend" : "mouseout";
+const HOVEROVER = "touchstart mouseover";
+const HOVEROUT = "touchend mouseout";
 
 
 const KeyboardElement = customElements.define('all-around-keyboard', class extends Component {
@@ -226,7 +225,9 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
 
   renderedCallback() {
     if(!this[shadowSVG]) {
-      this[shadowSVG] = select(this.shadowRoot.children[0]).append('svg');
+      this[shadowSVG] = select(this.shadowRoot.children[0])
+      .append("svg")
+      .attr("width","100%");
     }
 
     this[shadowSVG].append("g")
