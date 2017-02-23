@@ -57,6 +57,7 @@ var arc = d3.svg.arc()
     .innerRadius(function(d) { return d.sharp ? innerRadius + 80 : innerRadius; });
 
 var svg = d3.select("body").append("svg")
+    .attr("viewBox", "0 0 "+width+" "+height)
     .attr("width", width)
     .attr("height", height)
   .append("g")
