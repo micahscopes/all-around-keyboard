@@ -9,6 +9,8 @@ import { select, selectAll, namespaces } from 'd3-selection';
 
 const KEYBOARD = Symbol();
 const KEYS = Symbol();
+
+const currentKeyPositions = Symbol();
 const shadowSVG = Symbol();
 
 const SVGStrokePadding = 5;
@@ -89,44 +91,51 @@ function setupKeyboard(){
             .octaveSize(this.notesInOctave)
             .pie(this.pie)
 
-  let kbData = g.selectAll("path").data(this[KEYS]);//,(d)=>d.index);
+  let kbAll = g.selectAll("path").data(this[KEYS])
+  // .sort((a,b) => (!a.raised && b.raised ? -1 : 1) );
+
+  let kbLower = kbAll.filter((d)=>!d.raised)
+  let kbUpper = kbAll.filter((d)=>d.raised)
 
   // EXIT
-  kbData.exit()
+  kbAll.exit()
   .on(KEYPRESS,null)
   .on(KEYRELEASE,null)
   .on(HOVEROVER,null)
   .on(HOVEROUT,null)
   .remove();
 
-  // ENTER
-  let kb = kbData.enter()
+  let kb = kbAll.enter()
   .append("path")
   .attr("d",function(d){
     var k = drawKeys(d)
-    this._current = k;
+    elem[currentKeyPositions][d.index] = k;
     return k;
-  })
-  .merge(kbData)
-
+  }).merge(kbAll)
 
   // UPDATE (ANIMATE)
-  transition("morph").duration(750);
+  transition("morph");
 
-  function animateKeys(d) {
+  function animateKeys(d,k) {
     let thing = this;
-    let i = interpolate(this._current,drawKeys(d));
+    let i = interpolate(elem[currentKeyPositions][d.index],drawKeys(d));
     return function(t){
-      thing._current = i(t);
-      return thing._current;
+      elem[currentKeyPositions][d.index] = i(t);
+      return elem[currentKeyPositions][d.index];
     }
   }
 
-  kbData.transition("morph").attrTween("d", animateKeys)
-  // .each(function(d) { this._current = d; })
+  kbAll
+  .transition("morph")
+  .attrTween("d", animateKeys)
+  .duration(this.transitionTime)
+
+  kb.filter((d)=>d.raised).raise()
 
   this[KEYBOARD] = kb;
   updateKeyClasses.call(this);
+
+  // kb.sort((a,b) => (!a.raised && b.raised ? -1 : 1) )
 
   kb.on(HOVEROVER, (d) => {
     var e = new Event(KEYPRESS); e.index = d.index;
@@ -136,12 +145,10 @@ function setupKeyboard(){
     var e = new Event(KEYRELEASE); e.index = d.index;
     this.dispatchEvent(e)})
 
-  let kbElem = this;
-
   kb.on(KEYPRESS, function(d,i){
-    if(kbElem.synth) {soundKey(this,d.frequency)} })
+    if(elem.synth) {soundKey(this,d.frequency)} })
   .on(KEYRELEASE, function(d,i){
-    if(kbElem.synth) {dampKey(this)} }
+    if(elem.synth) {dampKey(this)} }
   );
 }
 
@@ -208,7 +215,8 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       width: prop.number({ attribute: true, default: 500 }),
       overlapping: prop.number({ attribute: true, default: 0.5 }),
       pie: prop.boolean({attribute: true, default: false}),
-      synth: prop.boolean({attribute: true, default: false})
+      synth: prop.boolean({attribute: true, default: false}),
+      transitionTime: prop.number({attribute: true, default: 750})
     };
   }
   connectedCallback () {
@@ -219,6 +227,8 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     this[pressedKeys] = new Set();
     this[litKeys] = new Set();
     this[litNotes] = new Set();
+
+    this[currentKeyPositions] = {};
 
     this.addEventListener(KEYPRESS,function(e){
       this[KEYBOARD].filter((d)=>d.index == e.index)

@@ -13623,7 +13623,8 @@ var     HTMLElement$1 = root.HTMLElement;
         }
 
         var raisedPatternOctaves = Math.ceil(Math.max.apply(Math, raisedPattern) / notes.length);
-        var allKeys = [],
+        var pieKeys = [],
+            allKeys = [],
             raisedKeys = [],
             lowerKeys = [];
         var lowerCount = 0;
@@ -13637,18 +13638,18 @@ var     HTMLElement$1 = root.HTMLElement;
 
         if (pieStyle) {
           for (k = 0; k < notes.length * octaves; k++) {
-            allKeys.push(k + 1);
+            pieKeys.push(k + 1);
           }
 
-          allKeys = pie().startAngle(startAngle).endAngle(endAngle).sort(function (a, b) {
+          pieKeys = pie().startAngle(startAngle).endAngle(endAngle).sort(function (a, b) {
             return a - b;
-          }).value(1)(allKeys);
+          }).value(1)(pieKeys);
         }
 
         for (k = 0, l = 0; k < notes.length * octaves; k++) {
           var diffAngle = (endAngle(k) - startAngle(k)) / lowerCount;
 
-          var key = pieStyle ? allKeys[k] : {};
+          var key = pieStyle ? pieKeys[k] : {};
 
           key.note = notes[k % notes.length];
           key.index = k + 1;
@@ -13661,6 +13662,7 @@ var     HTMLElement$1 = root.HTMLElement;
             }
             key.raised = true;
             raisedKeys.push(key);
+            allKeys.push(key);
           } else {
             if (!pieStyle) {
               key.startAngle = startAngle(k) + l * diffAngle;
@@ -13668,10 +13670,11 @@ var     HTMLElement$1 = root.HTMLElement;
             }
             key.raised = false;
             lowerKeys.push(key);
+            allKeys.push(key);
             l++;
           }
         }
-        allKeys = lowerKeys.concat(raisedKeys);
+        // allKeys = lowerKeys.concat(raisedKeys);
         return allKeys;
       }
 
@@ -16508,6 +16511,8 @@ var     tau$2 = 2 * Math.PI;
 
     var KEYBOARD = Symbol();
     var KEYS = Symbol();
+
+    var currentKeyPositions = Symbol();
     var shadowSVG = Symbol();
 
     var SVGStrokePadding = 5;
@@ -16549,35 +16554,47 @@ var     tau$2 = 2 * Math.PI;
       // DATA JOIN
       this[KEYS] = keyLayout().octaves(this.octaves).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave).pie(this.pie);
 
-      var kbData = g.selectAll("path").data(this[KEYS]); //,(d)=>d.index);
+      var kbAll = g.selectAll("path").data(this[KEYS]);
+      // .sort((a,b) => (!a.raised && b.raised ? -1 : 1) );
+
+      var kbLower = kbAll.filter(function (d) {
+        return !d.raised;
+      });
+      var kbUpper = kbAll.filter(function (d) {
+        return d.raised;
+      });
 
       // EXIT
-      kbData.exit().on(KEYPRESS, null).on(KEYRELEASE, null).on(HOVEROVER, null).on(HOVEROUT, null).remove();
+      kbAll.exit().on(KEYPRESS, null).on(KEYRELEASE, null).on(HOVEROVER, null).on(HOVEROUT, null).remove();
 
-      // ENTER
-      var kb = kbData.enter().append("path").attr("d", function (d) {
+      var kb = kbAll.enter().append("path").attr("d", function (d) {
         var k = drawKeys(d);
-        this._current = k;
+        elem[currentKeyPositions][d.index] = k;
         return k;
-      }).merge(kbData);
+      }).merge(kbAll);
 
       // UPDATE (ANIMATE)
-      transition("morph").duration(750);
+      transition("morph");
 
-      function animateKeys(d) {
+      function animateKeys(d, k) {
         var thing = this;
-        var i = value(this._current, drawKeys(d));
+        var i = value(elem[currentKeyPositions][d.index], drawKeys(d));
         return function (t) {
-          thing._current = i(t);
-          return thing._current;
+          elem[currentKeyPositions][d.index] = i(t);
+          return elem[currentKeyPositions][d.index];
         };
       }
 
-      kbData.transition("morph").attrTween("d", animateKeys);
-      // .each(function(d) { this._current = d; })
+      kbAll.transition("morph").attrTween("d", animateKeys).duration(this.transitionTime);
+
+      kb.filter(function (d) {
+        return d.raised;
+      }).raise();
 
       this[KEYBOARD] = kb;
       updateKeyClasses.call(this);
+
+      // kb.sort((a,b) => (!a.raised && b.raised ? -1 : 1) )
 
       kb.on(HOVEROVER, function (d) {
         var e = new Event(KEYPRESS);e.index = d.index;
@@ -16588,14 +16605,12 @@ var     tau$2 = 2 * Math.PI;
         _this.dispatchEvent(e);
       });
 
-      var kbElem = this;
-
       kb.on(KEYPRESS, function (d, i) {
-        if (kbElem.synth) {
+        if (elem.synth) {
           soundKey(this, d.frequency);
         }
       }).on(KEYRELEASE, function (d, i) {
-        if (kbElem.synth) {
+        if (elem.synth) {
           dampKey(this);
         }
       });
@@ -16670,6 +16685,8 @@ var     tau$2 = 2 * Math.PI;
           this[pressedKeys] = new Set();
           this[litKeys] = new Set();
           this[litNotes] = new Set();
+
+          this[currentKeyPositions] = {};
 
           this.addEventListener(KEYPRESS, function (e) {
             this[KEYBOARD].filter(function (d) {
@@ -16763,7 +16780,8 @@ var     tau$2 = 2 * Math.PI;
             width: number({ attribute: true, default: 500 }),
             overlapping: number({ attribute: true, default: 0.5 }),
             pie: boolean({ attribute: true, default: false }),
-            synth: boolean({ attribute: true, default: false })
+            synth: boolean({ attribute: true, default: false }),
+            transitionTime: number({ attribute: true, default: 750 })
           };
         }
       }]);

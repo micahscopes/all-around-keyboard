@@ -31,7 +31,7 @@ export const keyLayout = function(){
     }
 
     let raisedPatternOctaves = Math.ceil(Math.max.apply(Math,raisedPattern)/notes.length);
-    let allKeys = [], raisedKeys = [], lowerKeys = [];
+    let pieKeys = [], allKeys = [], raisedKeys = [], lowerKeys = [];
     let lowerCount = 0;
     let k,l;
     for(k=0; k<notes.length*octaves; k++){
@@ -40,20 +40,20 @@ export const keyLayout = function(){
 
     if(pieStyle){
       for(k = 0; k < notes.length*octaves; k++){
-        allKeys.push(k+1);
+        pieKeys.push(k+1);
       }
 
-      allKeys = pie()
+      pieKeys = pie()
       .startAngle(startAngle)
       .endAngle(endAngle)
       .sort(function(a, b) { return a - b; })
-      .value(1)(allKeys);
+      .value(1)(pieKeys);
     }
 
     for(k = 0, l = 0; k < notes.length*octaves; k++) {
       let diffAngle = (endAngle(k)-startAngle(k))/lowerCount;
 
-      let key = pieStyle ? allKeys[k] : {};
+      let key = pieStyle ? pieKeys[k] : {};
 
       key.note = notes[k%notes.length];
       key.index = k+1;
@@ -66,6 +66,7 @@ export const keyLayout = function(){
         }
         key.raised = true;
         raisedKeys.push(key);
+        allKeys.push(key);
       } else {
         if(!pieStyle){
           key.startAngle = startAngle(k) + l*diffAngle;
@@ -73,10 +74,11 @@ export const keyLayout = function(){
         }
         key.raised = false;
         lowerKeys.push(key);
+        allKeys.push(key);
         l++;
       }
     }
-    allKeys = lowerKeys.concat(raisedKeys);
+    // allKeys = lowerKeys.concat(raisedKeys);
     return allKeys;
   }
 
