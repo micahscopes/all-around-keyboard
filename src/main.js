@@ -106,14 +106,22 @@ function setupKeyboard(){
   .on(HOVEROVER,null)
   .remove();
 
+  kbAll.enter().filter((d)=>d.raised).raise()
+
   let kb = kbAll.enter()
-  .append("path")
+  .append("path").classed("key",true)
   .attr("d",function(d){
     var k = drawKeys(d)
     elem[currentKeyPositions][d.index] = k;
     return k;
   }).merge(kbAll)
 
+  this[KEYBOARD] = kb;
+
+  kb.classed("key--pressed",(d)=> this[pressedKeys].has(d.index))
+  .classed("key--highlight",(d)=> ( this[litKeys].has(d.index) ||
+                                    this[litNotes].has(d.note)
+                                  ));
   // UPDATE (ANIMATE)
   transition("morph");
 
@@ -131,13 +139,11 @@ function setupKeyboard(){
   .attrTween("d", animateKeys)
   .duration(this.transitionTime)
 
-  kb.filter((d)=>d.raised).raise()
-
-  this[KEYBOARD] = kb;
-  updateKeyClasses.call(this);
-
-  // kb.sort((a,b) => (!a.raised && b.raised ? -1 : 1) )
-
+  kb
+  .classed("key--upper",(d)=>d.raised)
+  .classed("key--lower",(d)=>!d.raised)
+  .filter((d)=>d.raised).raise()
+  
   kb.on(HOVEROVER, (d) => {
     var e = new Event(KEYPRESS); e.index = d.index;
     // console.log(d);
@@ -151,18 +157,6 @@ function setupKeyboard(){
   .on(KEYRELEASE, function(d,i){
     if(elem.synth) {dampKey(this)} }
   )
-}
-
-function updateKeyClasses(){
-  this[KEYBOARD]
-  .classed("key",true)
-  .classed("key--upper",(d)=>d.raised)
-  .classed("key--lower",(d)=>!d.raised)
-  .classed("key--pressed",(d)=> this[pressedKeys].has(d.index))
-  .classed("key--highlight",(d)=> ( this[litKeys].has(d.index) ||
-                                    this[litNotes].has(d.note)
-                                  ));
-
 }
 
 const multiEmitter = (elem,eventName,indexName) => {

@@ -16594,12 +16594,23 @@ var     tau$2 = 2 * Math.PI;
       // EXIT
       kbAll.exit().on(KEYPRESS, null).on(HOVEROVER, null).remove();
 
-      var kb = kbAll.enter().append("path").attr("d", function (d) {
+      kbAll.enter().filter(function (d) {
+        return d.raised;
+      }).raise();
+
+      var kb = kbAll.enter().append("path").classed("key", true).attr("d", function (d) {
         var k = drawKeys(d);
         elem[currentKeyPositions][d.index] = k;
         return k;
       }).merge(kbAll);
 
+      this[KEYBOARD] = kb;
+
+      kb.classed("key--pressed", function (d) {
+        return _this[pressedKeys].has(d.index);
+      }).classed("key--highlight", function (d) {
+        return _this[litKeys].has(d.index) || _this[litNotes].has(d.note);
+      });
       // UPDATE (ANIMATE)
       transition("morph");
 
@@ -16614,14 +16625,13 @@ var     tau$2 = 2 * Math.PI;
 
       kbAll.transition("morph").attrTween("d", animateKeys).duration(this.transitionTime);
 
-      kb.filter(function (d) {
+      kb.classed("key--upper", function (d) {
+        return d.raised;
+      }).classed("key--lower", function (d) {
+        return !d.raised;
+      }).filter(function (d) {
         return d.raised;
       }).raise();
-
-      this[KEYBOARD] = kb;
-      updateKeyClasses.call(this);
-
-      // kb.sort((a,b) => (!a.raised && b.raised ? -1 : 1) )
 
       kb.on(HOVEROVER, function (d) {
         var e = new Event(KEYPRESS);e.index = d.index;
@@ -16640,20 +16650,6 @@ var     tau$2 = 2 * Math.PI;
         if (elem.synth) {
           dampKey(this);
         }
-      });
-    }
-
-    function updateKeyClasses() {
-      var _this2 = this;
-
-      this[KEYBOARD].classed("key", true).classed("key--upper", function (d) {
-        return d.raised;
-      }).classed("key--lower", function (d) {
-        return !d.raised;
-      }).classed("key--pressed", function (d) {
-        return _this2[pressedKeys].has(d.index);
-      }).classed("key--highlight", function (d) {
-        return _this2[litKeys].has(d.index) || _this2[litNotes].has(d.note);
       });
     }
 
@@ -16691,7 +16687,7 @@ var     tau$2 = 2 * Math.PI;
       function _class2() {
         var _ref2;
 
-        var _temp, _this3, _ret;
+        var _temp, _this2, _ret;
 
         classCallCheck(this, _class2);
 
@@ -16699,9 +16695,9 @@ var     tau$2 = 2 * Math.PI;
           args[_key] = arguments[_key];
         }
 
-        return _ret = (_temp = (_this3 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this3), _this3.keysPress = multiEmitter(_this3, KEYPRESS, 'index'), _this3.keysRelease = multiEmitter(_this3, KEYRELEASE, 'index'), _this3.keysLight = multiEmitter(_this3, KEYLIGHT, 'index'), _this3.keysDim = multiEmitter(_this3, KEYDIM, 'index'), _this3.notesLight = multiEmitter(_this3, NOTELIGHT, 'note'), _this3.notesDim = multiEmitter(_this3, NOTEDIM, 'note'), _this3.panic = function () {
+        return _ret = (_temp = (_this2 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this2), _this2.keysPress = multiEmitter(_this2, KEYPRESS, 'index'), _this2.keysRelease = multiEmitter(_this2, KEYRELEASE, 'index'), _this2.keysLight = multiEmitter(_this2, KEYLIGHT, 'index'), _this2.keysDim = multiEmitter(_this2, KEYDIM, 'index'), _this2.notesLight = multiEmitter(_this2, NOTELIGHT, 'note'), _this2.notesDim = multiEmitter(_this2, NOTEDIM, 'note'), _this2.panic = function () {
           this.keysRelease(this[pressedKeys]);
-        }, _temp), possibleConstructorReturn(_this3, _ret);
+        }, _temp), possibleConstructorReturn(_this2, _ret);
       }
 
       createClass(_class2, [{
