@@ -19,31 +19,18 @@ export default {
       browser: true,
       preferBuiltins: true  // Default: true
     }),
-    commonjs(),
-    // eslint({
-    //   exclude: [
-    //     'src/styles/**',
-    //   ]
-    // }),
+    commonjs({
+      exclude: 'node_modules/skatejs/**'
+    }),
     babel({
-      // exclude: [
-      //  'node_modules/**',
-      // '*.json'
-      // ],
-      // include: [
-      //   'node_modules/**'
-      // ],
       presets: [
         ['es2015', { modules: false }],
-          // 'stage-2'
       ],
       plugins: [
         'transform-class-properties',
         'external-helpers',
-        // 'transform-runtime'
       ],
       exclude: 'node_modules/babel-runtime/**',
-    //   externalHelpers: true,
     }),
   ],
 };

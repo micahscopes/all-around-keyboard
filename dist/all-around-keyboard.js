@@ -11103,13 +11103,7 @@ var nativeTree = Object.freeze({
       };
     }
 
-    var index$24 = createCommonjsModule(function (module) {
-      'use strict';
-
-      module.exports = (typeof self === 'undefined' ? 'undefined' : _typeof(self)) === 'object' && self.self === self && self || _typeof(commonjsGlobal) === 'object' && commonjsGlobal.global === commonjsGlobal && commonjsGlobal || commonjsGlobal;
-    });
-
-    var root = interopDefault(index$24);
+    var root = typeof window === 'undefined' ? global : window;
 
 var     customElements$2 = root.customElements;
 var     HTMLElement$1 = root.HTMLElement;
@@ -11187,12 +11181,9 @@ var     HTMLElement$1 = root.HTMLElement;
         }
       }
     }, symbols.default, function (elem, name, value) {
-      var _ref = customElements$2.get(elem.localName) || {
-        props: {},
-        prototype: {}
-      },
-          props = _ref.props,
-          prototype = _ref.prototype;
+      var ce = customElements$2.get(elem.localName);
+      var props = ce && ce.props || {};
+      var prototype = ce && ce.prototype || {};
 
       // TODO when refactoring properties to not have to workaround the old
       // WebKit bug we can remove the "name in props" check below.
@@ -11207,8 +11198,6 @@ var     HTMLElement$1 = root.HTMLElement;
       // We prefer setting props, so we do this if there's a property matching
       // name that was passed. However, certain props on SVG elements are
       // readonly and error when you try to set them.
-
-
       if ((name in props || name in elem || name in prototype) && !('ownerSVGElement' in elem)) {
         applyProp(elem, name, value);
         return;
@@ -11246,17 +11235,22 @@ var     HTMLElement$1 = root.HTMLElement;
         return name;
       }
 
-      // We try and return the cached tag name, if one exists.
-      if (name[$name]) {
-        return name[$name];
+      // We try and return the cached tag name, if one exists. This will work with
+      // *any* web component of any version that defines a `static is` property.
+      if (name.is) {
+        return name.is;
       }
 
-      // If it's a custom element, we get the tag name by constructing it and
-      // caching it.
+      // Get the name for the custom element by constructing it and using the
+      // localName property. Cache it and lookup the cached value for future calls.
       if (name.prototype instanceof HTMLElement$1) {
+        if (name[$name]) {
+          return name[$name];
+        }
+
         // eslint-disable-next-line
         var elem = new name();
-        return name[$name] = elem.localName;
+        return elem[$name] = elem.localName;
       }
 
       // Pass all other values through so IDOM gets what it's expecting.
@@ -11563,13 +11557,6 @@ var     HTMLElement$1 = root.HTMLElement;
       };
     }
     var debounce = native(MutationObserver$1) ? microtaskDebounce : taskDebounce;
-
-    function deprecated(elem, oldUsage, newUsage) {
-      if (DEBUG) {
-        var ownerName = elem.localName ? elem.localName : String(elem);
-        console.warn(ownerName + " " + oldUsage + " is deprecated. Use " + newUsage + ".");
-      }
-    }
 
     /**
      * @internal
@@ -12034,6 +12021,14 @@ var     HTMLElement$1 = root.HTMLElement;
     var _prevOldValue = createSymbol('prevOldValue');
     var _prevNewValue = createSymbol('prevNewValue');
 
+    // TEMPORARY: Once deprecations in this file are removed, this can be removed.
+    function deprecated(elem, oldUsage, newUsage) {
+      if (process.env.NODE_ENV !== 'production') {
+        var ownerName = elem.localName ? elem.localName : String(elem);
+        console.warn(ownerName + ' ' + oldUsage + ' is deprecated. Use ' + newUsage + '.');
+      }
+    }
+
     function preventDoubleCalling(elem, name, oldValue, newValue) {
       return name === elem[_prevName] && oldValue === elem[_prevOldValue] && newValue === elem[_prevNewValue];
     }
@@ -12095,6 +12090,7 @@ var     HTMLElement$1 = root.HTMLElement;
       inherits(_class2, _HTMLElement);
       createClass(_class2, null, [{
         key: 'observedAttributes',
+
 
         /**
          * Returns unique attribute names configured with props and
@@ -12173,7 +12169,7 @@ var     HTMLElement$1 = root.HTMLElement;
         // static render()
         // Note that renderCallback is an optional method!
         if (!_this.renderCallback && constructor.render) {
-          DEBUG && deprecated(_this, 'static render', 'renderCallback');
+          deprecated(_this, 'static render', 'renderCallback');
           _this.renderCallback = constructor.render.bind(constructor, _this);
         }
 
@@ -12185,7 +12181,7 @@ var     HTMLElement$1 = root.HTMLElement;
         var created = constructor.created;
 
         if (isFunction(created)) {
-          DEBUG && deprecated(_this, 'static created', 'constructor');
+          deprecated(_this, 'static created', 'constructor');
           created(_this);
         }
 
@@ -12226,7 +12222,7 @@ var     HTMLElement$1 = root.HTMLElement;
           var attached = this.constructor.attached;
 
           if (isFunction(attached)) {
-            DEBUG && deprecated(this, 'static attached', 'connectedCallback');
+            deprecated(this, 'static attached', 'connectedCallback');
             attached(this);
           }
 
@@ -12253,7 +12249,7 @@ var     HTMLElement$1 = root.HTMLElement;
           var detached = this.constructor.detached;
 
           if (isFunction(detached)) {
-            DEBUG && deprecated(this, 'static detached', 'disconnectedCallback');
+            deprecated(this, 'static detached', 'disconnectedCallback');
             detached(this);
           }
         }
@@ -12294,7 +12290,7 @@ var     HTMLElement$1 = root.HTMLElement;
           var attributeChanged = this.constructor.attributeChanged;
 
           if (isFunction(attributeChanged)) {
-            DEBUG && deprecated(this, 'static attributeChanged', 'attributeChangedCallback');
+            deprecated(this, 'static attributeChanged', 'attributeChangedCallback');
             attributeChanged(this, { name: name, newValue: newValue, oldValue: oldValue });
           }
         }
@@ -12305,7 +12301,7 @@ var     HTMLElement$1 = root.HTMLElement;
         key: 'updatedCallback',
         value: function updatedCallback(prevProps) {
           if (this.constructor.hasOwnProperty('updated')) {
-            DEBUG && deprecated(this, 'static updated', 'updatedCallback');
+            deprecated(this, 'static updated', 'updatedCallback');
           }
           return this.constructor.updated(this, prevProps);
         }
@@ -12316,7 +12312,7 @@ var     HTMLElement$1 = root.HTMLElement;
         key: 'renderedCallback',
         value: function renderedCallback() {
           if (this.constructor.hasOwnProperty('rendered')) {
-            DEBUG && deprecated(this, 'static rendered', 'renderedCallback');
+            deprecated(this, 'static rendered', 'renderedCallback');
           }
           return this.constructor.rendered(this);
         }
@@ -12474,6 +12470,8 @@ var     HTMLElement$1 = root.HTMLElement;
       }]);
       return _class2;
     }(HTMLElement$2);
+
+    _class2.is = '';
 
     var Event$1 = function (TheEvent) {
       if (TheEvent) {
@@ -16542,7 +16540,7 @@ var     tau$2 = 2 * Math.PI;
     var currentKeyPositions = Symbol();
     var shadowSVG = Symbol();
 
-    var SVGStrokePadding = 12;
+    var SVGStrokePadding = 15;
 
     var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n  // fill: url(#diagonalHatch);\n  // stroke-dasharray: 8,2;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n';
 

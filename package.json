@@ -30,7 +30,7 @@
     "kefir": "^3.7.1",
     "kefir-observable-selector": "^0.2.1",
     "mathjs": "^3.5.3",
-    "skatejs": "4.5.2",
+    "skatejs": "^4.6.8",
     "skatejs-web-components": "micahscopes/web-components#newer-dependencies",
     "xstream": "^10.2.0"
   },
