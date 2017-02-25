@@ -10,10 +10,11 @@
                       depth=200
                       id="sending">
 </all-around-keyboard>
+<iframe src="http://mmontag.github.io/dx7-synth-js/"></iframe>
 
 <script>
 // midi send example
-const TRANSPOSE = 5*12;
+const TRANSPOSE = 0;
   WebMidi.enable(function (err) {
     if (err) { console.log("WebMidi could not be enabled.", err); }
     var midiOut = WebMidi.outputs[0];
@@ -31,6 +32,12 @@ const TRANSPOSE = 5*12;
 </script>
 
 <style>
+  iframe {
+    margin: 50px auto;
+    width: 100%;
+    height: 150%;
+  }
+
   body {
     margin: 0 50px;
     background: aquamarine;
