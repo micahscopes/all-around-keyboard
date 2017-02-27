@@ -16489,25 +16489,27 @@ var     tau$2 = 2 * Math.PI;
     }
 
     function soundKey(key, frequency) {
-      // console.log(d,i,"hey!!!!");
+      console.log(key, "on!!!!");
       var context = window[LILSYNTH];
       var now = context.currentTime;
-      if (!key.gain) {
-        key.gain = context.createGain();
-        key.gain.connect(context.destination);
-        key.gain.gain.linearRampToValueAtTime(0, now + .02);
+      if (key.gain) {
+        key.gain.gain.setValueAtTime(key.gain.gain.value, context.currentTime);
+        key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.03);
       }
-      if (!key.filter) {
+      key.gain = context.createGain();
+      key.gain.gain.value = 0;
+      key.gain.connect(context.destination);
+      if (true) {
         key.filter = context.createBiquadFilter();
         key.filter.frequency.value = frequency;
         key.filter.type = "bandpass";
-        key.filter.connect(key.gain);
       }
+      key.filter.connect(key.gain);
       if (key.oscillator) {
-        key.oscillator.stop(now + 2);
+        key.oscillator.stop(now + 0.4);
       };
       if (key.oscillator2) {
-        key.oscillator2.stop(now + 2);
+        key.oscillator2.stop(now + 0.4);
       };
       key.oscillator = context.createOscillator();
       key.oscillator2 = context.createOscillator();
@@ -16516,22 +16518,26 @@ var     tau$2 = 2 * Math.PI;
       key.oscillator.connect(key.filter);
       key.oscillator2.frequency.value = frequency;
       key.oscillator2.connect(key.gain);
-      key.gain.gain.linearRampToValueAtTime(.05, now + .05);
-      // key.gain.gain.linearRampToValueAtTime(0.005, now + 5);
-      key.oscillator.start(now + 0.02);
-      key.oscillator2.start(now + 0.02);
+      key.gain.gain.linearRampToValueAtTime(0.05, context.currentTime + 0.05);
+      // key.gain.gain.linearRampToValueAtTime(0.02, context.currentTime + 0.5);
+      key.oscillator.start(now);
+      key.oscillator2.start(now);
       key.oscillator.stop(now + 40);
       key.oscillator2.stop(now + 40);
     }
 
     function dampKey(key) {
+      var decay = 0.4;
+      console.log(key, "off!!!!");
       var context = window[LILSYNTH];
       var now = context.currentTime;
       if (key.gain) {
-        key.gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        key.gain.gain.setValueAtTime(key.gain.gain.value, context.currentTime);
+        // key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.03);
+        key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + decay);
       }
-      if (key.oscillator) key.oscillator.stop(now + 2);
-      if (key.oscillator2) key.oscillator2.stop(now + 2);
+      if (key.oscillator) key.oscillator.stop(now + decay);
+      if (key.oscillator2) key.oscillator2.stop(now + decay);
     }
 
     var KEYBOARD = Symbol();
@@ -16621,7 +16627,15 @@ var     tau$2 = 2 * Math.PI;
         };
       }
 
-      kbAll.transition("morph").attrTween("d", animateKeys).duration(this.transitionTime);
+      if (this.transitionTime > 0) {
+        kbAll.transition("morph").attrTween("d", animateKeys).duration(this.transitionTime);
+      } else {
+        kb.attr("d", function (d) {
+          var k = drawKeys(d);
+          elem[currentKeyPositions][d.index] = k;
+          return k;
+        });
+      }
 
       kb.classed("key--upper", function (d) {
         return d.raised;
@@ -16632,13 +16646,14 @@ var     tau$2 = 2 * Math.PI;
       }).raise();
 
       kb.on(HOVEROVER, function (d) {
+        event.preventDefault();
         var e = new Event(KEYPRESS);e.index = d.index;
-        // console.log(d);
         _this.dispatchEvent(e);
-      }).on(HOVEROUT, function (d) {
+      }, true).on(HOVEROUT, function (d) {
+        event.preventDefault();
         var e = new Event(KEYRELEASE);e.index = d.index;
         _this.dispatchEvent(e);
-      });
+      }, true);
 
       kb.on(KEYPRESS, function (d, i) {
         if (elem.synth) {
@@ -16673,7 +16688,7 @@ var     tau$2 = 2 * Math.PI;
     var NOTELIGHT = 'notelight';
     var NOTEDIM = 'notedim';
     var HOVEROVER = "touchstart mouseover";
-    var HOVEROUT = "touchend mouseout";
+    var HOVEROUT = "touchend mouseout mouseup";
 
     var pressedKeys = Symbol();
     var litKeys = Symbol();

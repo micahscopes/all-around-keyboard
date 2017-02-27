@@ -5,7 +5,7 @@ import { arc } from 'd3-shape';
 import { transition } from 'd3-transition';
 import { interpolate } from 'd3-interpolate';
 import { setupLilSynth, soundKey, dampKey } from './lil-synth'
-import { select, selectAll, namespaces } from 'd3-selection';
+import { select, selectAll, namespaces, event as currentEvent } from 'd3-selection';
 
 const KEYBOARD = Symbol();
 const KEYS = Symbol();
@@ -134,10 +134,18 @@ function setupKeyboard(){
     }
   }
 
-  kbAll
-  .transition("morph")
-  .attrTween("d", animateKeys)
-  .duration(this.transitionTime)
+  if(this.transitionTime > 0){
+    kbAll
+    .transition("morph")
+    .attrTween("d", animateKeys)
+    .duration(this.transitionTime)
+  } else {
+    kb.attr("d",function(d){
+      var k = drawKeys(d)
+      elem[currentKeyPositions][d.index] = k;
+      return k;
+    })
+  }
 
   kb
   .classed("key--upper",(d)=>d.raised)
@@ -145,12 +153,13 @@ function setupKeyboard(){
   .filter((d)=>d.raised).raise()
 
   kb.on(HOVEROVER, (d) => {
+    currentEvent.preventDefault();
     var e = new Event(KEYPRESS); e.index = d.index;
-    // console.log(d);
-    this.dispatchEvent(e)})
+    this.dispatchEvent(e)}, true)
   .on(HOVEROUT, (d) => {
+    currentEvent.preventDefault();
     var e = new Event(KEYRELEASE); e.index = d.index;
-    this.dispatchEvent(e)})
+    this.dispatchEvent(e)}, true)
 
   kb.on(KEYPRESS, function(d,i){
     if(elem.synth) {soundKey(this,d.frequency)} })
@@ -179,7 +188,7 @@ const KEYDIM = 'keydim';
 const NOTELIGHT = 'notelight';
 const NOTEDIM = 'notedim';
 const HOVEROVER = "touchstart mouseover";
-const HOVEROUT = "touchend mouseout";
+const HOVEROUT = "touchend mouseout mouseup";
 
 const pressedKeys = Symbol();
 const litKeys = Symbol();
