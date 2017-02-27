@@ -16616,7 +16616,6 @@ var     tau$2 = 2 * Math.PI;
         return _this[litKeys].has(d.index) || _this[litNotes].has(d.note);
       });
       // UPDATE (ANIMATE)
-      transition("morph");
 
       function animateKeys(d, k) {
         var thing = this;
@@ -16628,6 +16627,8 @@ var     tau$2 = 2 * Math.PI;
       }
 
       if (this.transitionTime > 0) {
+        transition("morph");
+
         kbAll.transition("morph").attrTween("d", animateKeys).duration(this.transitionTime);
       } else {
         kb.attr("d", function (d) {

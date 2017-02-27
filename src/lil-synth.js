@@ -12,7 +12,7 @@ function setupLilSynth() {
 }
 
 function soundKey(key, frequency) {
-  console.log(key,"on!!!!");
+  // console.log(key,"on!!!!");
   let context = window[LILSYNTH];
   let now = context.currentTime;
   if (key.gain) {
@@ -51,7 +51,7 @@ function soundKey(key, frequency) {
 
 function dampKey(key) {
   let decay = 0.4;
-  console.log(key,"off!!!!");
+  // console.log(key,"off!!!!");
   let context = window[LILSYNTH];
   let now = context.currentTime;
   if (key.gain){

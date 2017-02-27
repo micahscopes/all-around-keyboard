@@ -123,7 +123,6 @@ function setupKeyboard(){
                                     this[litNotes].has(d.note)
                                   ));
   // UPDATE (ANIMATE)
-  transition("morph");
 
   function animateKeys(d,k) {
     let thing = this;
@@ -135,6 +134,8 @@ function setupKeyboard(){
   }
 
   if(this.transitionTime > 0){
+    transition("morph");
+    
     kbAll
     .transition("morph")
     .attrTween("d", animateKeys)
