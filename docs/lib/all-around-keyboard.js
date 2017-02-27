@@ -16489,7 +16489,7 @@ var     tau$2 = 2 * Math.PI;
     }
 
     function soundKey(key, frequency) {
-      console.log(key, "on!!!!");
+      // console.log(key,"on!!!!");
       var context = window[LILSYNTH];
       var now = context.currentTime;
       if (key.gain) {
@@ -16528,7 +16528,7 @@ var     tau$2 = 2 * Math.PI;
 
     function dampKey(key) {
       var decay = 0.4;
-      console.log(key, "off!!!!");
+      // console.log(key,"off!!!!");
       var context = window[LILSYNTH];
       var now = context.currentTime;
       if (key.gain) {
