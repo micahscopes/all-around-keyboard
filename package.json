@@ -1,7 +1,7 @@
 {
   "name": "all-around-keyboard",
   "author": "micahscopes",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Round piano keyboards with Web Components + d3.js",
   "private": true,
   "main": "dist/all-around-keyboard.js",
@@ -31,7 +31,6 @@
     "babel-eslint": "^7.1.1",
     "babel-plugin-external-helpers": "^6.18.0",
     "babel-plugin-transform-class-properties": "^6.23.0",
-    "babel-plugin-transform-es2015-classes": "^6.23.0",
     "babel-plugin-transform-es2015-destructuring": "^6.23.0",
     "babel-preset-es2015-rollup": "^3.0.0",
     "babel-preset-es2016": "^6.22.0",
