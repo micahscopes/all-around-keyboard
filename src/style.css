@@ -24,11 +24,11 @@ all-around-keyboard {
 
 .key:not(.key--modulating) {
   transition-delay: 0s !important;
-  transition-duration: 0.2s !important;
+  transition-duration: 0.1s !important;
 }
 
-.key--highlight, .key--pressed {
-  transition-duration: 0s;
+.key:not(.key--modulating).key--highlight, .key:not(.key--modulating).key--pressed {
+  transition-duration: 0s !important;
 }
 
 .key--pressed,
