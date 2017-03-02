@@ -2,6 +2,7 @@
 import babel from 'rollup-plugin-babel';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
+import string from 'rollup-plugin-string';
 
 export default {
   entry: 'src/main.js',
@@ -13,6 +14,7 @@ export default {
   moduleName: "window",
   // sourceMap: 'inline',
   plugins: [
+    string({include: '**/*.css'}),
     resolve({
       jsnext: true,
       main: true,
@@ -24,11 +26,12 @@ export default {
     }),
     babel({
       presets: [
-        ['es2015', { modules: false }],
+      ["es2015", {modules: false}],
+      ["es2016"]
       ],
       plugins: [
         'transform-class-properties',
-        'external-helpers',
+        'transform-es2015-destructuring',
       ],
       exclude: 'node_modules/babel-runtime/**',
     }),

@@ -12618,10 +12618,26 @@ var     HTMLElement$1 = root.HTMLElement;
       };
     }
 
+    var abs = Math.abs;
+    var atan2 = Math.atan2;
+    var cos = Math.cos;
+    var max = Math.max;
+    var min = Math.min;
+    var sin = Math.sin;
+    var sqrt = Math.sqrt;
+
     var epsilon$1 = 1e-12;
     var pi$1 = Math.PI;
     var halfPi = pi$1 / 2;
     var tau$1 = 2 * pi$1;
+
+    function acos(x) {
+      return x > 1 ? 0 : x < -1 ? pi$1 : Math.acos(x);
+    }
+
+    function asin(x) {
+      return x >= 1 ? halfPi : x <= -1 ? -halfPi : Math.asin(x);
+    }
 
     function arcInnerRadius(d) {
       return d.innerRadius;
@@ -12643,10 +12659,6 @@ var     HTMLElement$1 = root.HTMLElement;
       return d && d.padAngle; // Note: optional!
     }
 
-    function asin(x) {
-      return x >= 1 ? halfPi : x <= -1 ? -halfPi : Math.asin(x);
-    }
-
     function intersect(x0, y0, x1, y1, x2, y2, x3, y3) {
       var x10 = x1 - x0,
           y10 = y1 - y0,
@@ -12661,7 +12673,7 @@ var     HTMLElement$1 = root.HTMLElement;
     function cornerTangents(x0, y0, x1, y1, r1, rc, cw) {
       var x01 = x0 - x1,
           y01 = y0 - y1,
-          lo = (cw ? rc : -rc) / Math.sqrt(x01 * x01 + y01 * y01),
+          lo = (cw ? rc : -rc) / sqrt(x01 * x01 + y01 * y01),
           ox = lo * y01,
           oy = -lo * x01,
           x11 = x0 + ox,
@@ -12675,7 +12687,7 @@ var     HTMLElement$1 = root.HTMLElement;
           d2 = dx * dx + dy * dy,
           r = r1 - rc,
           D = x11 * y10 - x10 * y11,
-          d = (dy < 0 ? -1 : 1) * Math.sqrt(Math.max(0, r * r * d2 - D * D)),
+          d = (dy < 0 ? -1 : 1) * sqrt(max(0, r * r * d2 - D * D)),
           cx0 = (D * dy - dx * d) / d2,
           cy0 = (-D * dx - dy * d) / d2,
           cx1 = (D * dy + dx * d) / d2,
@@ -12716,7 +12728,7 @@ var     HTMLElement$1 = root.HTMLElement;
             r1 = +outerRadius.apply(this, arguments),
             a0 = startAngle.apply(this, arguments) - halfPi,
             a1 = endAngle.apply(this, arguments) - halfPi,
-            da = Math.abs(a1 - a0),
+            da = abs(a1 - a0),
             cw = a1 > a0;
 
         if (!context) context = buffer = path();
@@ -12729,10 +12741,10 @@ var     HTMLElement$1 = root.HTMLElement;
 
         // Or is it a circle or annulus?
         else if (da > tau$1 - epsilon$1) {
-            context.moveTo(r1 * Math.cos(a0), r1 * Math.sin(a0));
+            context.moveTo(r1 * cos(a0), r1 * sin(a0));
             context.arc(0, 0, r1, a0, a1, !cw);
             if (r0 > epsilon$1) {
-              context.moveTo(r0 * Math.cos(a1), r0 * Math.sin(a1));
+              context.moveTo(r0 * cos(a1), r0 * sin(a1));
               context.arc(0, 0, r0, a1, a0, cw);
             }
           }
@@ -12746,8 +12758,8 @@ var     HTMLElement$1 = root.HTMLElement;
                   da0 = da,
                   da1 = da,
                   ap = padAngle.apply(this, arguments) / 2,
-                  rp = ap > epsilon$1 && (padRadius ? +padRadius.apply(this, arguments) : Math.sqrt(r0 * r0 + r1 * r1)),
-                  rc = Math.min(Math.abs(r1 - r0) / 2, +cornerRadius.apply(this, arguments)),
+                  rp = ap > epsilon$1 && (padRadius ? +padRadius.apply(this, arguments) : sqrt(r0 * r0 + r1 * r1)),
+                  rc = min(abs(r1 - r0) / 2, +cornerRadius.apply(this, arguments)),
                   rc0 = rc,
                   rc1 = rc,
                   t0,
@@ -12755,23 +12767,23 @@ var     HTMLElement$1 = root.HTMLElement;
 
               // Apply padding? Note that since r1 ≥ r0, da1 ≥ da0.
               if (rp > epsilon$1) {
-                var p0 = asin(rp / r0 * Math.sin(ap)),
-                    p1 = asin(rp / r1 * Math.sin(ap));
+                var p0 = asin(rp / r0 * sin(ap)),
+                    p1 = asin(rp / r1 * sin(ap));
                 if ((da0 -= p0 * 2) > epsilon$1) p0 *= cw ? 1 : -1, a00 += p0, a10 -= p0;else da0 = 0, a00 = a10 = (a0 + a1) / 2;
                 if ((da1 -= p1 * 2) > epsilon$1) p1 *= cw ? 1 : -1, a01 += p1, a11 -= p1;else da1 = 0, a01 = a11 = (a0 + a1) / 2;
               }
 
-              var x01 = r1 * Math.cos(a01),
-                  y01 = r1 * Math.sin(a01),
-                  x10 = r0 * Math.cos(a10),
-                  y10 = r0 * Math.sin(a10);
+              var x01 = r1 * cos(a01),
+                  y01 = r1 * sin(a01),
+                  x10 = r0 * cos(a10),
+                  y10 = r0 * sin(a10);
 
               // Apply rounded corners?
               if (rc > epsilon$1) {
-                var x11 = r1 * Math.cos(a11),
-                    y11 = r1 * Math.sin(a11),
-                    x00 = r0 * Math.cos(a00),
-                    y00 = r0 * Math.sin(a00);
+                var x11 = r1 * cos(a11),
+                    y11 = r1 * sin(a11),
+                    x00 = r0 * cos(a00),
+                    y00 = r0 * sin(a00);
 
                 // Restrict the corner radius according to the sector angle.
                 if (da < pi$1) {
@@ -12780,10 +12792,10 @@ var     HTMLElement$1 = root.HTMLElement;
                       ay = y01 - oc[1],
                       bx = x11 - oc[0],
                       by = y11 - oc[1],
-                      kc = 1 / Math.sin(Math.acos((ax * bx + ay * by) / (Math.sqrt(ax * ax + ay * ay) * Math.sqrt(bx * bx + by * by))) / 2),
-                      lc = Math.sqrt(oc[0] * oc[0] + oc[1] * oc[1]);
-                  rc0 = Math.min(rc, (r0 - lc) / (kc - 1));
-                  rc1 = Math.min(rc, (r1 - lc) / (kc + 1));
+                      kc = 1 / sin(acos((ax * bx + ay * by) / (sqrt(ax * ax + ay * ay) * sqrt(bx * bx + by * by))) / 2),
+                      lc = sqrt(oc[0] * oc[0] + oc[1] * oc[1]);
+                  rc0 = min(rc, (r0 - lc) / (kc - 1));
+                  rc1 = min(rc, (r1 - lc) / (kc + 1));
                 }
               }
 
@@ -12798,13 +12810,13 @@ var     HTMLElement$1 = root.HTMLElement;
                   context.moveTo(t0.cx + t0.x01, t0.cy + t0.y01);
 
                   // Have the corners merged?
-                  if (rc1 < rc) context.arc(t0.cx, t0.cy, rc1, Math.atan2(t0.y01, t0.x01), Math.atan2(t1.y01, t1.x01), !cw);
+                  if (rc1 < rc) context.arc(t0.cx, t0.cy, rc1, atan2(t0.y01, t0.x01), atan2(t1.y01, t1.x01), !cw);
 
                   // Otherwise, draw the two corners and the ring.
                   else {
-                      context.arc(t0.cx, t0.cy, rc1, Math.atan2(t0.y01, t0.x01), Math.atan2(t0.y11, t0.x11), !cw);
-                      context.arc(0, 0, r1, Math.atan2(t0.cy + t0.y11, t0.cx + t0.x11), Math.atan2(t1.cy + t1.y11, t1.cx + t1.x11), !cw);
-                      context.arc(t1.cx, t1.cy, rc1, Math.atan2(t1.y11, t1.x11), Math.atan2(t1.y01, t1.x01), !cw);
+                      context.arc(t0.cx, t0.cy, rc1, atan2(t0.y01, t0.x01), atan2(t0.y11, t0.x11), !cw);
+                      context.arc(0, 0, r1, atan2(t0.cy + t0.y11, t0.cx + t0.x11), atan2(t1.cy + t1.y11, t1.cx + t1.x11), !cw);
+                      context.arc(t1.cx, t1.cy, rc1, atan2(t1.y11, t1.x11), atan2(t1.y01, t1.x01), !cw);
                     }
                 }
 
@@ -12823,13 +12835,13 @@ var     HTMLElement$1 = root.HTMLElement;
                   context.lineTo(t0.cx + t0.x01, t0.cy + t0.y01);
 
                   // Have the corners merged?
-                  if (rc0 < rc) context.arc(t0.cx, t0.cy, rc0, Math.atan2(t0.y01, t0.x01), Math.atan2(t1.y01, t1.x01), !cw);
+                  if (rc0 < rc) context.arc(t0.cx, t0.cy, rc0, atan2(t0.y01, t0.x01), atan2(t1.y01, t1.x01), !cw);
 
                   // Otherwise, draw the two corners and the ring.
                   else {
-                      context.arc(t0.cx, t0.cy, rc0, Math.atan2(t0.y01, t0.x01), Math.atan2(t0.y11, t0.x11), !cw);
-                      context.arc(0, 0, r0, Math.atan2(t0.cy + t0.y11, t0.cx + t0.x11), Math.atan2(t1.cy + t1.y11, t1.cx + t1.x11), cw);
-                      context.arc(t1.cx, t1.cy, rc0, Math.atan2(t1.y11, t1.x11), Math.atan2(t1.y01, t1.x01), !cw);
+                      context.arc(t0.cx, t0.cy, rc0, atan2(t0.y01, t0.x01), atan2(t0.y11, t0.x11), !cw);
+                      context.arc(0, 0, r0, atan2(t0.cy + t0.y11, t0.cx + t0.x11), atan2(t1.cy + t1.y11, t1.cx + t1.x11), cw);
+                      context.arc(t1.cx, t1.cy, rc0, atan2(t1.y11, t1.x11), atan2(t1.y01, t1.x01), !cw);
                     }
                 }
 
@@ -12845,7 +12857,7 @@ var     HTMLElement$1 = root.HTMLElement;
       arc.centroid = function () {
         var r = (+innerRadius.apply(this, arguments) + +outerRadius.apply(this, arguments)) / 2,
             a = (+startAngle.apply(this, arguments) + +endAngle.apply(this, arguments)) / 2 - pi$1 / 2;
-        return [Math.cos(a) * r, Math.sin(a) * r];
+        return [cos(a) * r, sin(a) * r];
       };
 
       arc.innerRadius = function (_) {
@@ -16493,17 +16505,16 @@ var     tau$2 = 2 * Math.PI;
       var context = window[LILSYNTH];
       var now = context.currentTime;
       if (key.gain) {
-        key.gain.gain.setValueAtTime(key.gain.gain.value, context.currentTime);
+        key.gain.gain.setValueAtTime(Math.max(0.0001, key.gain.gain.value), context.currentTime);
         key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.03);
       }
       key.gain = context.createGain();
-      key.gain.gain.value = 0;
+      key.gain.gain.value = 0.0001;
       key.gain.connect(context.destination);
-      if (true) {
-        key.filter = context.createBiquadFilter();
-        key.filter.frequency.value = frequency;
-        key.filter.type = "bandpass";
-      }
+      key.filter = context.createBiquadFilter();
+      key.filter.frequency.value = frequency;
+      key.filter.type = "bandpass";
+
       key.filter.connect(key.gain);
       if (key.oscillator) {
         key.oscillator.stop(now + 0.4);
@@ -16532,14 +16543,21 @@ var     tau$2 = 2 * Math.PI;
       var context = window[LILSYNTH];
       var now = context.currentTime;
       if (key.gain) {
-        key.gain.gain.setValueAtTime(key.gain.gain.value, context.currentTime);
-        // key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.03);
+        key.gain.gain.setValueAtTime(Math.max(0.0001, key.gain.gain.value), context.currentTime);
         key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + decay);
       }
       if (key.oscillator) key.oscillator.stop(now + decay);
       if (key.oscillator2) key.oscillator2.stop(now + decay);
     }
 
+    var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n  // fill: url(#diagonalHatch);\n  // stroke-dasharray: 8,2;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n";
+
+    var setToArray = function setToArray(set) {
+      return [].concat(toConsumableArray(set));
+      // var array = [];
+      // set.forEach((item) => {array.push(item)});
+      // return array;
+    };
     var KEYBOARD = Symbol();
     var KEYS = Symbol();
 
@@ -16547,8 +16565,6 @@ var     tau$2 = 2 * Math.PI;
     var shadowSVG = Symbol();
 
     var SVGStrokePadding = 15;
-
-    var css = '\nall-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n  // fill: url(#diagonalHatch);\n  // stroke-dasharray: 8,2;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n';
 
     function setupKeyboard() {
       var _this = this;
@@ -16671,7 +16687,7 @@ var     tau$2 = 2 * Math.PI;
       return function (Ks) {
         var _ref;
 
-        Ks = (_ref = []).concat.apply(_ref, [Ks]);
+        Ks = (_ref = []).concat.apply(_ref, [setToArray(Ks)]);
         Ks.forEach(function (k) {
           var e = new Event(eventName);e[indexName] = k;
           elem.dispatchEvent(e);
@@ -16709,8 +16725,11 @@ var     tau$2 = 2 * Math.PI;
           args[_key] = arguments[_key];
         }
 
-        return _ret = (_temp = (_this2 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this2), _this2.keysPress = multiEmitter(_this2, KEYPRESS, 'index'), _this2.keysRelease = multiEmitter(_this2, KEYRELEASE, 'index'), _this2.keysLight = multiEmitter(_this2, KEYLIGHT, 'index'), _this2.keysDim = multiEmitter(_this2, KEYDIM, 'index'), _this2.notesLight = multiEmitter(_this2, NOTELIGHT, 'note'), _this2.notesDim = multiEmitter(_this2, NOTEDIM, 'note'), _this2.panic = function () {
+        return _ret = (_temp = (_this2 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this2), _this2.keysPress = multiEmitter(_this2, KEYPRESS, 'index'), _this2.keysRelease = multiEmitter(_this2, KEYRELEASE, 'index'), _this2.keysLight = multiEmitter(_this2, KEYLIGHT, 'index'), _this2.keysDim = multiEmitter(_this2, KEYDIM, 'index'), _this2.notesLight = multiEmitter(_this2, NOTELIGHT, 'note'), _this2.notesDim = multiEmitter(_this2, NOTEDIM, 'note'), _this2.releaseAll = function () {
           this.keysRelease(this[pressedKeys]);
+        }, _this2.dimAll = function () {
+          this.keysDim(this[litKeys]);
+          this.notesDim(this[litNotes]);
         }, _temp), possibleConstructorReturn(_this2, _ret);
       }
 
@@ -16719,7 +16738,8 @@ var     tau$2 = 2 * Math.PI;
         value: function connectedCallback() {
           // Ensure we call the parent.
           get(_class2.prototype.__proto__ || Object.getPrototypeOf(_class2.prototype), 'connectedCallback', this).call(this);
-          setupLilSynth();
+          setupLilSynth(this);
+          // this.synthesizer = new PolySynth(6, Synth).toMaster();
 
           this[pressedKeys] = new Set();
           this[litKeys] = new Set();
@@ -16731,6 +16751,7 @@ var     tau$2 = 2 * Math.PI;
             this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--pressed", true).dispatch(KEYPRESS);
+            // this.synthesizer.triggerAttack(d.frequency)
 
             this[pressedKeys].add(e.index);
           });
@@ -16739,6 +16760,7 @@ var     tau$2 = 2 * Math.PI;
             this[KEYBOARD].filter(function (d) {
               return d.index == e.index;
             }).classed("key--pressed", false).dispatch(KEYRELEASE);
+            // this.synthesizer.triggerRelease(d.frequency)
 
             this[pressedKeys].delete(e.index);
           });

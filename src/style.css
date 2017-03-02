@@ -1,0 +1,29 @@
+all-around-keyboard {
+  display: block;
+  padding: 5px;
+}
+:host {
+  display: block;
+  padding: 5px;
+}
+.key {
+  stroke-width: 1.5px;
+}
+
+.key--lower { fill: #fff; stroke: #777; }
+.key--upper { fill: #333; stroke: #000; }
+
+.key--pressed,
+.key--highlight.key--pressed.key--upper,
+.key--highlight.key--pressed.key--lower
+  { fill: deeppink; }
+
+.key--highlight {
+  stroke: rgba(0, 91, 255, 0.73);
+  stroke-width: 5.5px;
+  // fill: url(#diagonalHatch);
+  // stroke-dasharray: 8,2;
+}
+
+.key--highlight.key--lower { fill: rgb(215, 237, 249) }
+.key--highlight.key--upper { fill: #495b96 }

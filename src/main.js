@@ -6,7 +6,14 @@ import { transition } from 'd3-transition';
 import { interpolate } from 'd3-interpolate';
 import { setupLilSynth, soundKey, dampKey } from './lil-synth'
 import { select, selectAll, namespaces, event as currentEvent } from 'd3-selection';
+import css from './style.css'
 
+const setToArray = (set) => {
+  return [...set];
+  // var array = [];
+  // set.forEach((item) => {array.push(item)});
+  // return array;
+}
 const KEYBOARD = Symbol();
 const KEYS = Symbol();
 
@@ -14,38 +21,6 @@ const currentKeyPositions = Symbol();
 const shadowSVG = Symbol();
 
 const SVGStrokePadding = 15;
-
-const css = `
-all-around-keyboard {
-  display: block;
-  padding: 5px;
-}
-:host {
-  display: block;
-  padding: 5px;
-}
-.key {
-  stroke-width: 1.5px;
-}
-
-.key--lower { fill: #fff; stroke: #777; }
-.key--upper { fill: #333; stroke: #000; }
-
-.key--pressed,
-.key--highlight.key--pressed.key--upper,
-.key--highlight.key--pressed.key--lower
-  { fill: deeppink; }
-
-.key--highlight {
-  stroke: rgba(0, 91, 255, 0.73);
-  stroke-width: 5.5px;
-  // fill: url(#diagonalHatch);
-  // stroke-dasharray: 8,2;
-}
-
-.key--highlight.key--lower { fill: rgb(215, 237, 249) }
-.key--highlight.key--upper { fill: #495b96 }
-`
 
 function setupKeyboard(){
   var elem = this; //make sure to bind elem to this function
@@ -135,7 +110,7 @@ function setupKeyboard(){
 
   if(this.transitionTime > 0){
     transition("morph");
-    
+
     kbAll
     .transition("morph")
     .attrTween("d", animateKeys)
@@ -171,7 +146,7 @@ function setupKeyboard(){
 
 const multiEmitter = (elem,eventName,indexName) => {
   return (Ks) => {
-    Ks = [].concat(...[Ks]);
+    Ks = [].concat(...[setToArray(Ks)]);
     Ks.forEach((k) => {
       var e = new Event(eventName); e[indexName] = k;
       elem.dispatchEvent(e)}
@@ -202,9 +177,16 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
   keysDim = multiEmitter(this,KEYDIM,'index');
   notesLight = multiEmitter(this,NOTELIGHT,'note');
   notesDim = multiEmitter(this,NOTEDIM,'note');
-  panic = function(){
-    this.keysRelease(this[pressedKeys])
-  }
+
+  releaseAll = function(){
+    this.keysRelease(this[pressedKeys]);
+  };
+
+  dimAll = function(){
+    this.keysDim(this[litKeys]);
+    this.notesDim(this[litNotes]);
+  };
+
 
   static get props () {
     return {
@@ -233,7 +215,8 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
   connectedCallback () {
     // Ensure we call the parent.
     super.connectedCallback();
-    setupLilSynth();
+    setupLilSynth(this);
+    // this.synthesizer = new PolySynth(6, Synth).toMaster();
 
     this[pressedKeys] = new Set();
     this[litKeys] = new Set();
@@ -245,6 +228,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       this[KEYBOARD].filter((d)=>d.index == e.index)
       .classed("key--pressed",true)
       .dispatch(KEYPRESS);
+      // this.synthesizer.triggerAttack(d.frequency)
 
       this[pressedKeys].add(e.index);
     })
@@ -253,6 +237,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       this[KEYBOARD].filter((d)=>d.index == e.index)
       .classed("key--pressed",false)
       .dispatch(KEYRELEASE);
+      // this.synthesizer.triggerRelease(d.frequency)
 
       this[pressedKeys].delete(e.index);
     })

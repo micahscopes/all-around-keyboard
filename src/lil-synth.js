@@ -16,17 +16,16 @@ function soundKey(key, frequency) {
   let context = window[LILSYNTH];
   let now = context.currentTime;
   if (key.gain) {
-    key.gain.gain.setValueAtTime(key.gain.gain.value, context.currentTime);
+    key.gain.gain.setValueAtTime(Math.max(0.0001,key.gain.gain.value), context.currentTime);
     key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.03);
   }
     key.gain = context.createGain();
-    key.gain.gain.value = 0;
+    key.gain.gain.value = 0.0001;
     key.gain.connect(context.destination);
-  if (true) {
-    key.filter = context.createBiquadFilter();
-    key.filter.frequency.value = frequency;
-    key.filter.type = "bandpass";
-  }
+  key.filter = context.createBiquadFilter();
+  key.filter.frequency.value = frequency;
+  key.filter.type = "bandpass";
+
   key.filter.connect(key.gain);
   if (key.oscillator){
     key.oscillator.stop(now+0.4)
@@ -55,8 +54,7 @@ function dampKey(key) {
   let context = window[LILSYNTH];
   let now = context.currentTime;
   if (key.gain){
-    key.gain.gain.setValueAtTime(key.gain.gain.value, context.currentTime);
-    // key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.03);
+    key.gain.gain.setValueAtTime(Math.max(0.0001,key.gain.gain.value), context.currentTime);
     key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + decay);
 
  }
