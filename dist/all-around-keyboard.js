@@ -16554,7 +16554,7 @@ var     tau$2 = 2 * Math.PI;
       if (key.oscillator2) key.oscillator2.stop(context.currentTime + decay);
     }
 
-    var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n  // fill: url(#diagonalHatch);\n  // stroke-dasharray: 8,2;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n";
+    var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: white; stroke: #777;\n}\n.key--upper { fill: black; stroke: #000;\n}\n\n.key, .key--modulating {\n  transition: fill;\n  transition-duration: 1s;\n  transition-delay: 1s;\n  transition-timing-function: ease-in-out;\n}\n\n.key:not(.key--modulating) {\n  transition-delay: 0s !important;\n  transition-duration: 0.2s !important;\n}\n\n.key--highlight, .key--pressed {\n  transition-duration: 0s;\n}\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n";
 
     var setToArray = function setToArray(set) {
       return [].concat(toConsumableArray(set));
@@ -16605,7 +16605,9 @@ var     tau$2 = 2 * Math.PI;
       // DATA JOIN
       this[KEYS] = keyLayout().octaves(this.octaves).leftmostKey(this.leftmostKey).baseTone(this.baseTone).baseKey(this.baseKey).raisedPattern(this.raisedNotes).startAngle(startAngle).endAngle(endAngle).octaveSize(this.notesInOctave).pie(this.pie);
 
-      var kbAll = g.selectAll("path").data(this[KEYS]);
+      var kbAll = g.selectAll("path").data(this[KEYS], function (d) {
+        return d.index;
+      });
       // .sort((a,b) => (!a.raised && b.raised ? -1 : 1) );
 
       var kbLower = kbAll.filter(function (d) {
@@ -16618,15 +16620,41 @@ var     tau$2 = 2 * Math.PI;
       // EXIT
       kbAll.exit().on(KEYPRESS, null).on(HOVEROVER, null).remove();
 
-      kbAll.enter().filter(function (d) {
+      var kb = kbAll.enter().append("path").classed("key", true).classed('key--lower', function (d) {
+        return !d.raised;
+      }).classed('key--upper', function (d) {
         return d.raised;
-      }).raise();
-
-      var kb = kbAll.enter().append("path").classed("key", true).attr("d", function (d) {
+      }).attr("d", function (d) {
         var k = drawKeys(d);
         elem[currentKeyPositions][d.index] = k;
         return k;
-      }).merge(kbAll);
+      }).merge(kbAll).attr("style", null);
+
+      var updateModulating = function updateModulating() {
+        kb.classed('key--modulating', function (d) {
+          var needsRaising = d.raised && !this.classList.contains("key--upper");
+          var needsLowering = !d.raised && !this.classList.contains("key--lower");
+          var wasRaised = !d.raised && this.classList.contains("key--upper");
+          var wasLowered = d.raised && this.classList.contains("key--lower");
+
+          return needsRaising || needsLowering; //|| wasRaised || wasLowered;
+        });
+      };
+
+      updateModulating();
+      setTimeout(updateModulating, 1000);
+
+      setTimeout(function () {
+        kb.classed('key--lower', function (d) {
+          return !d.raised;
+        }).classed('key--upper', function (d) {
+          return d.raised;
+        });
+      }, 1);
+
+      kb.filter(function (d) {
+        return d.raised;
+      }).raise();
 
       this[KEYBOARD] = kb;
 
@@ -16635,6 +16663,7 @@ var     tau$2 = 2 * Math.PI;
       }).classed("key--highlight", function (d) {
         return _this[litKeys].has(d.index) || _this[litNotes].has(d.note);
       });
+
       // UPDATE (ANIMATE)
 
       function animateKeys(d, k) {
@@ -16657,14 +16686,6 @@ var     tau$2 = 2 * Math.PI;
           return k;
         });
       }
-
-      kb.classed("key--upper", function (d) {
-        return d.raised;
-      }).classed("key--lower", function (d) {
-        return !d.raised;
-      }).filter(function (d) {
-        return d.raised;
-      }).raise();
 
       kb.on(HOVEROVER, function (d) {
         event.preventDefault();
@@ -16811,6 +16832,17 @@ var     tau$2 = 2 * Math.PI;
 
           // todo: cleanup, cleanup... (everybody do your share!)
           //        ...i.e. clearInterval(this[sym]);
+        }
+      }, {
+        key: 'updatedCallback',
+        value: function updatedCallback(previousProps) {
+          // The 'previousProps' will be undefined if it is the initial render.
+          if (!previousProps) {
+            return true;
+          } else {
+            setupKeyboard.call(this);
+            return false;
+          }
         }
       }, {
         key: 'renderCallback',

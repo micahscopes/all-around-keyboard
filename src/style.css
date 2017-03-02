@@ -10,8 +10,26 @@ all-around-keyboard {
   stroke-width: 1.5px;
 }
 
-.key--lower { fill: #fff; stroke: #777; }
-.key--upper { fill: #333; stroke: #000; }
+.key--lower { fill: white; stroke: #777;
+}
+.key--upper { fill: black; stroke: #000;
+}
+
+.key, .key--modulating {
+  transition: fill;
+  transition-duration: 1s;
+  transition-delay: 1s;
+  transition-timing-function: ease-in-out;
+}
+
+.key:not(.key--modulating) {
+  transition-delay: 0s !important;
+  transition-duration: 0.2s !important;
+}
+
+.key--highlight, .key--pressed {
+  transition-duration: 0s;
+}
 
 .key--pressed,
 .key--highlight.key--pressed.key--upper,
@@ -21,8 +39,6 @@ all-around-keyboard {
 .key--highlight {
   stroke: rgba(0, 91, 255, 0.73);
   stroke-width: 5.5px;
-  // fill: url(#diagonalHatch);
-  // stroke-dasharray: 8,2;
 }
 
 .key--highlight.key--lower { fill: rgb(215, 237, 249) }

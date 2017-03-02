@@ -69,7 +69,7 @@ function setupKeyboard(){
             .octaveSize(this.notesInOctave)
             .pie(this.pie)
 
-  let kbAll = g.selectAll("path").data(this[KEYS])
+  let kbAll = g.selectAll("path").data(this[KEYS],(d) => d.index)
   // .sort((a,b) => (!a.raised && b.raised ? -1 : 1) );
 
   let kbLower = kbAll.filter((d)=>!d.raised)
@@ -81,15 +81,39 @@ function setupKeyboard(){
   .on(HOVEROVER,null)
   .remove();
 
-  kbAll.enter().filter((d)=>d.raised).raise()
-
   let kb = kbAll.enter()
   .append("path").classed("key",true)
+  .classed('key--lower',(d) => !d.raised )
+  .classed('key--upper',(d) => d.raised )
   .attr("d",function(d){
     var k = drawKeys(d)
     elem[currentKeyPositions][d.index] = k;
     return k;
   }).merge(kbAll)
+  .attr("style",null)
+
+
+  let updateModulating = () => {
+    kb.classed('key--modulating', function(d){
+      let needsRaising = ( d.raised && !this.classList.contains("key--upper") );
+      let needsLowering = ( !d.raised && !this.classList.contains("key--lower") );
+      let wasRaised = ( !d.raised && this.classList.contains("key--upper") );
+      let wasLowered = ( d.raised && this.classList.contains("key--lower") );
+
+      return needsRaising || needsLowering; //|| wasRaised || wasLowered;
+    })
+  }
+
+  updateModulating();
+  setTimeout(updateModulating,1000);
+
+  setTimeout(() => {
+    kb.classed('key--lower',(d) => !d.raised )
+      .classed('key--upper',(d) => d.raised )
+  },1);
+
+
+  kb.filter((d)=>d.raised).raise();
 
   this[KEYBOARD] = kb;
 
@@ -97,6 +121,7 @@ function setupKeyboard(){
   .classed("key--highlight",(d)=> ( this[litKeys].has(d.index) ||
                                     this[litNotes].has(d.note)
                                   ));
+
   // UPDATE (ANIMATE)
 
   function animateKeys(d,k) {
@@ -122,11 +147,6 @@ function setupKeyboard(){
       return k;
     })
   }
-
-  kb
-  .classed("key--upper",(d)=>d.raised)
-  .classed("key--lower",(d)=>!d.raised)
-  .filter((d)=>d.raised).raise()
 
   kb.on(HOVEROVER, (d) => {
     currentEvent.preventDefault();
@@ -282,6 +302,16 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
 
     // todo: cleanup, cleanup... (everybody do your share!)
     //        ...i.e. clearInterval(this[sym]);
+  }
+
+  updatedCallback (previousProps) {
+    // The 'previousProps' will be undefined if it is the initial render.
+    if (!previousProps) {
+      return true;
+    } else {
+      setupKeyboard.call(this);
+      return false;
+    }
   }
 
   renderCallback () {
