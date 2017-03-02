@@ -7,14 +7,26 @@
 <script>
 // midi receive example
 
-  this.TRANSPOSE = -12;
   var keyboards = {};
+  var row, grid;
+  grid = document.createElement("div");
+  grid.setAttribute("id","kb-table");
+  document.body.appendChild(grid);
   for(var ch=1; ch<=16; ch++){
+    if(ch%4 == 1){
+      row = document.createElement("div");
+      grid.appendChild(row);
+    }
     let kb = document.createElement("all-around-keyboard");
-    kb.leftmostKey=0;
-    kb.synth = true; kb.octaves = 6;
-    kb.sweep = Math.PI*4/3;
-    document.body.appendChild(kb);
+    kb.classList.add("col"+(ch%4))
+    kb.leftmostKey = 12;
+    kb.baseKey = 12;
+    kb.synth = true; kb.octaves = 7;
+    kb.depth = 150;
+    kb.width = 800;
+    kb.pie = false;
+    kb.sweep = Math.PI*2;
+    row.appendChild(kb);
     keyboards[ch] = kb;
   }
 
@@ -25,13 +37,12 @@
     let kb = document.querySelector('all-around-keyboard#receiving');
 
     midiIn.addListener('noteon', 'all', function (e) {
-        /*console.log(e);*/
-        keyboards[e.channel].keysPress(e.note.number+TRANSPOSE);
+        keyboards[e.channel].keysPress(e.note.number);
         keyboards[e.channel].notesLight(e.note.number%12);
     });
 
     midiIn.addListener('noteoff', 'all', function (e) {
-        keyboards[e.channel].keysRelease(e.note.number+TRANSPOSE);
+        keyboards[e.channel].keysRelease(e.note.number);
         keyboards[e.channel].notesDim(e.note.number%12);
     });
   });
@@ -41,9 +52,9 @@
 <style>
   body {
     margin: 0 50px;
-    background: aquamarine;
+    background: #94c3b7;
     font-family: sans;
-    color: #4466bb;
+    color: slateblue;
     text-align: center;
   }
 
@@ -59,13 +70,17 @@
       margin: 0 1em;    /* any design */
   }
 
-  all-around-keyboard {
+  #kb-table {
+    margin: 0 auto;
     width: 80%;
-    margin: 50px;
-    margin-top: 50px;
-    margin-bottom: 0px;
-    display: inline-block;
-    border: solid #4466bb 1px;
-    padding: 40px;
+    display: table;
+  }
+  #kb-table div {
+    display: table-row;
+  }
+
+  all-around-keyboard {
+    display: table-cell;
+    padding: 20px;
   }
 </style>
