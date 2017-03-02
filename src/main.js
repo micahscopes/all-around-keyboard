@@ -146,7 +146,9 @@ function setupKeyboard(){
 
 const multiEmitter = (elem,eventName,indexName) => {
   return (Ks) => {
-    Ks = [].concat(...[setToArray(Ks)]);
+    if (typeof Ks == "number") { Ks = [Ks]}
+    else if (typeof Ks == "set") { Ks = setToArray(Ks) }
+    // else { Ks = [].concat(...[Ks]);}
     Ks.forEach((k) => {
       var e = new Event(eventName); e[indexName] = k;
       elem.dispatchEvent(e)}

@@ -16504,15 +16504,19 @@ var     tau$2 = 2 * Math.PI;
     function soundKey(key, frequency) {
       // console.log(key,"on!!!!");
       var context = window[LILSYNTH];
+      if (!key.filter) {
+        key.filter = context.createBiquadFilter();
+        key.filter.frequency.value = frequency;
+        key.filter.type = "bandpass";
+      }
       var now = context.currentTime;
+
       key.gain = context.createGain();
       key.gain.gain.value = 0.000001;
       key.gain.connect(context.destination);
-      key.filter = context.createBiquadFilter();
-      key.filter.frequency.value = frequency;
-      key.filter.type = "bandpass";
 
       key.filter.connect(key.gain);
+
       if (key.oscillator) {
         key.oscillator.stop(now + 0.4);
       };
@@ -16528,7 +16532,7 @@ var     tau$2 = 2 * Math.PI;
       key.oscillator2.connect(key.gain);
       // key.gain.gain.linearRampToValueAtTime(0.05, context.currentTime + 0.05);
       // key.gain.gain.exponentialRampToValueAtTime(0.05, context.currentTime + 0.1);
-      key.gain.gain.setTargetAtTime(0.05, context.currentTime, 0.04);
+      key.gain.gain.setTargetAtTime(0.05, now, 0.04);
       key.oscillator.start(now);
       key.oscillator2.start(now);
       key.oscillator.stop(now + 40);
@@ -16541,9 +16545,12 @@ var     tau$2 = 2 * Math.PI;
       var context = window[LILSYNTH];
       if (key.gain) {
         key.gain.gain.setTargetAtTime(0.000001, context.currentTime, 0.05);
+        setTimeout(function () {
+          key.gain.disconnect();
+        }, decay * 4);
       }
-      if (key.oscillator) key.oscillator.stop(context.currentTime + decay * 2);
-      if (key.oscillator2) key.oscillator2.stop(context.currentTime + decay * 2);
+      if (key.oscillator) key.oscillator.stop(context.currentTime + decay);
+      if (key.oscillator2) key.oscillator2.stop(context.currentTime + decay);
     }
 
     var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n  // fill: url(#diagonalHatch);\n  // stroke-dasharray: 8,2;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n";
@@ -16681,9 +16688,12 @@ var     tau$2 = 2 * Math.PI;
 
     var multiEmitter = function multiEmitter(elem, eventName, indexName) {
       return function (Ks) {
-        var _ref;
-
-        Ks = (_ref = []).concat.apply(_ref, [setToArray(Ks)]);
+        if (typeof Ks == "number") {
+          Ks = [Ks];
+        } else if (typeof Ks == "set") {
+          Ks = setToArray(Ks);
+        }
+        // else { Ks = [].concat(...[Ks]);}
         Ks.forEach(function (k) {
           var e = new Event(eventName);e[indexName] = k;
           elem.dispatchEvent(e);
@@ -16711,7 +16721,7 @@ var     tau$2 = 2 * Math.PI;
       inherits(_class2, _Component);
 
       function _class2() {
-        var _ref2;
+        var _ref;
 
         var _temp, _this2, _ret;
 
@@ -16721,7 +16731,7 @@ var     tau$2 = 2 * Math.PI;
           args[_key] = arguments[_key];
         }
 
-        return _ret = (_temp = (_this2 = possibleConstructorReturn(this, (_ref2 = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref2, [this].concat(args))), _this2), _this2.keysPress = multiEmitter(_this2, KEYPRESS, 'index'), _this2.keysRelease = multiEmitter(_this2, KEYRELEASE, 'index'), _this2.keysLight = multiEmitter(_this2, KEYLIGHT, 'index'), _this2.keysDim = multiEmitter(_this2, KEYDIM, 'index'), _this2.notesLight = multiEmitter(_this2, NOTELIGHT, 'note'), _this2.notesDim = multiEmitter(_this2, NOTEDIM, 'note'), _this2.releaseAll = function () {
+        return _ret = (_temp = (_this2 = possibleConstructorReturn(this, (_ref = _class2.__proto__ || Object.getPrototypeOf(_class2)).call.apply(_ref, [this].concat(args))), _this2), _this2.keysPress = multiEmitter(_this2, KEYPRESS, 'index'), _this2.keysRelease = multiEmitter(_this2, KEYRELEASE, 'index'), _this2.keysLight = multiEmitter(_this2, KEYLIGHT, 'index'), _this2.keysDim = multiEmitter(_this2, KEYDIM, 'index'), _this2.notesLight = multiEmitter(_this2, NOTELIGHT, 'note'), _this2.notesDim = multiEmitter(_this2, NOTEDIM, 'note'), _this2.releaseAll = function () {
           this.keysRelease(this[pressedKeys]);
         }, _this2.dimAll = function () {
           this.keysDim(this[litKeys]);
