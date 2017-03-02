@@ -883,9 +883,9 @@ cliui@^3.0.3:
     strip-ansi "^3.0.1"
     wrap-ansi "^2.0.0"
 
-cloudydom@skatejs/cloudydom#base:
+cloudydom@micahscopes/cloudydom#base:
   version "1.0.1"
-  resolved "https://codeload.github.com/skatejs/cloudydom/tar.gz/41e8f150004df758ba90b787808176d548fee91f"
+  resolved "https://codeload.github.com/micahscopes/cloudydom/tar.gz/f8cadb6ea39d17ed875e897167ec3dc57bd65c2e"
 
 co@^4.6.0:
   version "4.6.0"
@@ -2648,13 +2648,13 @@ signal-exit@^3.0.0:
 
 skatejs-web-components@micahscopes/web-components#newer-dependencies:
   version "0.0.0"
-  resolved "https://codeload.github.com/micahscopes/web-components/tar.gz/201aef97c2bf0fb8cf505b1184f128fcc7c36d96"
+  resolved "https://codeload.github.com/micahscopes/web-components/tar.gz/1fe99ed4d233367d411342399fda5b6ba06eec40"
   dependencies:
     "@webcomponents/custom-elements" webcomponents/custom-elements
     "@webcomponents/shadycss" "https://github.com/webcomponents/shadycss/archive/bea402d.tar.gz"
     "@webcomponents/template" "https://github.com/webcomponents/template/archive/60d743e.tar.gz"
     array.from "^1.0.3"
-    cloudydom skatejs/cloudydom#base
+    cloudydom micahscopes/cloudydom#base
     es6-promise "^4.0.5"
     object.assign "^4.0.4"
 
@@ -2927,10 +2927,6 @@ verror@1.3.6:
 vlq@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/vlq/-/vlq-0.2.1.tgz#14439d711891e682535467f8587c5630e4222a6c"
-
-"webcomponents.js@https://github.com/webcomponents/webcomponentsjs#v1":
-  version "0.7.22"
-  resolved "https://github.com/webcomponents/webcomponentsjs#98087b32edcf4ad0b841457194039cf150c867b0"
 
 which@^1.2.9:
   version "1.2.12"
