@@ -3,6 +3,12 @@
 <body>
 <ul>
 
+<all-around-keyboard  id="kb" transition-time=0 synth notes-in-octave="12"
+                      raised-notes="[1,3,6,8,10]"
+                      sweep=4 octaves="3"
+                      depth="100" width="500">
+</all-around-keyboard>
+
 <script src="../lib/dat.gui.js"></script>
 <script>
 
@@ -11,7 +17,7 @@ window.onload = function() {
   var gui = new dat.GUI({autoPlace: false});
   console.log("gui",gui);
   console.log("WHATS GOING ON")
-  /*document.getElementById("controls").appendChild(gui.domElement);*/
+  document.getElementById("controls").appendChild(gui.domElement);
   gui.add(kb, 'octaves',0,20);
   gui.add(kb, 'notesInOctave',0,20);
   gui.add(kb, 'pie');
@@ -28,16 +34,8 @@ window.onload = function() {
   gui.add(kb.style, 'width').name('element width')
 };
 </script>
+<div id="controls"></div>
 
-<div class="ctrls" id="controls"></div>
-
-<all-around-keyboard  id="kb" transition-time=0 synth notes-in-octave="12"
-                      raised-notes="[1,3,6,8,10]"
-                      sweep=4 octaves="3"
-                      depth="100" width="500">
-</all-around-keyboard>
-
-<li>who knows?</li>
 
 </ul>
 
@@ -53,6 +51,10 @@ window.onload = function() {
     text-align: center;
   }
 
+  #controls {
+    float: right;
+    width: 400px;
+  }
   .dg.main {
     width: 70% !important;
     margin: 0 auto;
@@ -64,6 +66,8 @@ window.onload = function() {
   }
   all-around-keyboard {
     max-width: 700px;
+    width: 50%;
+    float: left;
     margin: 0 auto;
     margin-top: 50px;
     margin-bottom: 0px;
