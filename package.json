@@ -23,11 +23,6 @@
     "d3-shape": "^1.0.3",
     "d3-svg": "^0.2.0",
     "d3-transition": "^1.0.3",
-    "js-combinatorics": "^0.5.2",
-    "katex": "^0.6.0",
-    "kefir": "^3.7.1",
-    "kefir-observable-selector": "^0.2.1",
-    "mathjs": "^3.5.3",
     "skatejs": "^4.6.8",
     "skatejs-web-components": "micahscopes/web-components#newer-dependencies"
   },

@@ -191,7 +191,7 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
   static get props () {
     return {
       notesInOctave: prop.number({ attribute: true, default: 12 }),
-      raisedNotes: prop.array  ({ attribute: true, default: [1,3,6,8,10] }),
+      raisedNotes: prop.array({ attribute: true, default: [1,3,6,8,10] }),
       octaves: prop.number({ attribute: true, default: 2 }),
       sweep: prop.number({ attribute: true, default: Math.PI/2,
         deserialize (val) {
