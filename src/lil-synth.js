@@ -15,13 +15,9 @@ function soundKey(key, frequency) {
   // console.log(key,"on!!!!");
   let context = window[LILSYNTH];
   let now = context.currentTime;
-  if (key.gain) {
-    key.gain.gain.setValueAtTime(Math.max(0.0001,key.gain.gain.value), context.currentTime);
-    key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.03);
-  }
-    key.gain = context.createGain();
-    key.gain.gain.value = 0.0001;
-    key.gain.connect(context.destination);
+  key.gain = context.createGain();
+  key.gain.gain.value = 0.000001;
+  key.gain.connect(context.destination);
   key.filter = context.createBiquadFilter();
   key.filter.frequency.value = frequency;
   key.filter.type = "bandpass";
@@ -40,8 +36,9 @@ function soundKey(key, frequency) {
   key.oscillator.connect(key.filter);
   key.oscillator2.frequency.value = frequency;
   key.oscillator2.connect(key.gain);
-  key.gain.gain.linearRampToValueAtTime(0.05, context.currentTime + 0.05);
-  // key.gain.gain.linearRampToValueAtTime(0.02, context.currentTime + 0.5);
+  // key.gain.gain.linearRampToValueAtTime(0.05, context.currentTime + 0.05);
+  // key.gain.gain.exponentialRampToValueAtTime(0.05, context.currentTime + 0.1);
+  key.gain.gain.setTargetAtTime(0.05, context.currentTime, 0.04);
   key.oscillator.start(now);
   key.oscillator2.start(now);
   key.oscillator.stop(now + 40);
@@ -49,17 +46,14 @@ function soundKey(key, frequency) {
 }
 
 function dampKey(key) {
-  let decay = 0.4;
-  // console.log(key,"off!!!!");
+  let decay = 0.3;
+  // console.log("tone off!!!!");
   let context = window[LILSYNTH];
-  let now = context.currentTime;
   if (key.gain){
-    key.gain.gain.setValueAtTime(Math.max(0.0001,key.gain.gain.value), context.currentTime);
-    key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + decay);
-
- }
-  if(key.oscillator) key.oscillator.stop(now + decay);
-  if(key.oscillator2) key.oscillator2.stop(now + decay);
+    key.gain.gain.setTargetAtTime(0.000001, context.currentTime, 0.05);
+  }
+  if(key.oscillator) key.oscillator.stop(context.currentTime + decay*2);
+  if(key.oscillator2) key.oscillator2.stop(context.currentTime + decay*2);
 }
 
 

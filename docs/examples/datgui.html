@@ -18,8 +18,6 @@ window.onload = function() {
   kb.melodicMinor = function(){this.raisedNotes = [1,4,6,8,10]}
 
   var gui = new dat.GUI({autoPlace: false});
-  console.log("gui",gui);
-  console.log("WHATS GOING ON")
   document.getElementById("controls").appendChild(gui.domElement);
   gui.add(kb, 'octaves',0,20);
   gui.add(kb, 'notesInOctave',0,20);
@@ -52,7 +50,7 @@ window.onload = function() {
 <style>
   body {
     margin: 0 4%;
-    background: aquamarine;
+    background: deepskyblue;
     font-family: sans;
     color: #4466bb;
     text-align: center;

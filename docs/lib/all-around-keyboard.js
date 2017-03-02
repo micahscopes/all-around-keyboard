@@ -16505,12 +16505,8 @@ var     tau$2 = 2 * Math.PI;
       // console.log(key,"on!!!!");
       var context = window[LILSYNTH];
       var now = context.currentTime;
-      if (key.gain) {
-        key.gain.gain.setValueAtTime(Math.max(0.0001, key.gain.gain.value), context.currentTime);
-        key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.03);
-      }
       key.gain = context.createGain();
-      key.gain.gain.value = 0.0001;
+      key.gain.gain.value = 0.000001;
       key.gain.connect(context.destination);
       key.filter = context.createBiquadFilter();
       key.filter.frequency.value = frequency;
@@ -16530,8 +16526,9 @@ var     tau$2 = 2 * Math.PI;
       key.oscillator.connect(key.filter);
       key.oscillator2.frequency.value = frequency;
       key.oscillator2.connect(key.gain);
-      key.gain.gain.linearRampToValueAtTime(0.05, context.currentTime + 0.05);
-      // key.gain.gain.linearRampToValueAtTime(0.02, context.currentTime + 0.5);
+      // key.gain.gain.linearRampToValueAtTime(0.05, context.currentTime + 0.05);
+      // key.gain.gain.exponentialRampToValueAtTime(0.05, context.currentTime + 0.1);
+      key.gain.gain.setTargetAtTime(0.05, context.currentTime, 0.04);
       key.oscillator.start(now);
       key.oscillator2.start(now);
       key.oscillator.stop(now + 40);
@@ -16539,16 +16536,14 @@ var     tau$2 = 2 * Math.PI;
     }
 
     function dampKey(key) {
-      var decay = 0.4;
-      // console.log(key,"off!!!!");
+      var decay = 0.3;
+      // console.log("tone off!!!!");
       var context = window[LILSYNTH];
-      var now = context.currentTime;
       if (key.gain) {
-        key.gain.gain.setValueAtTime(Math.max(0.0001, key.gain.gain.value), context.currentTime);
-        key.gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + decay);
+        key.gain.gain.setTargetAtTime(0.000001, context.currentTime, 0.05);
       }
-      if (key.oscillator) key.oscillator.stop(now + decay);
-      if (key.oscillator2) key.oscillator2.stop(now + decay);
+      if (key.oscillator) key.oscillator.stop(context.currentTime + decay * 2);
+      if (key.oscillator2) key.oscillator2.stop(context.currentTime + decay * 2);
     }
 
     var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: #fff; stroke: #777; }\n.key--upper { fill: #333; stroke: #000; }\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n  // fill: url(#diagonalHatch);\n  // stroke-dasharray: 8,2;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n";
