@@ -4,28 +4,14 @@
 <ul>
 
 <script src="../lib/dat.gui.js"></script>
-
-<div class="ctrls" id="controls"></div>
-
-<all-around-keyboard  id="kb" transition-time=0 synth notes-in-octave="12"
-                      raised-notes="[1,3,6,8,10]"
-                      sweep=4 octaves="3"
-                      depth="100" width="500">
-</all-around-keyboard>
-
-<li>who knows?</li>
-
-</ul>
-
-<script src="../lib/all-around-keyboard.js"></script>
 <script>
 
 window.onload = function() {
   var kb = document.getElementById("kb");
-  var gui = new dat.GUI();
+  var gui = new dat.GUI({autoPlace: false});
   console.log("gui",gui);
   console.log("WHATS GOING ON")
-  document.getElementById("controls").appendChild(gui.domElement);
+  /*document.getElementById("controls").appendChild(gui.domElement);*/
   gui.add(kb, 'octaves',0,20);
   gui.add(kb, 'notesInOctave',0,20);
   gui.add(kb, 'pie');
@@ -41,32 +27,22 @@ window.onload = function() {
   gui.add(kb, 'baseKey',0,127);
   gui.add(kb.style, 'width').name('element width')
 };
-
-
-
-
-/*notesInOctave: prop.number({ attribute: true, default: 12 }),
-raisedNotes: prop.array  ({ attribute: true, default: [1,3,6,8,10] }),
-octaves: prop.number({ attribute: true, default: 2 }),
-sweep: prop.number({ attribute: true, default: Math.PI/2,
-  deserialize (val) {
-    return val*Math.PI/180;
-  },
-  serialize (val) {
-    return val*180/Math.PI;
-  }
-}),
-depth: prop.number({ attribute: true, default: 100 }),
-width: prop.number({ attribute: true, default: 500 }),
-overlapping: prop.number({ attribute: true, default: 0.5 }),
-pie: prop.boolean({attribute: true, default: false}),
-synth: prop.boolean({attribute: true, default: false}),
-transitionTime: prop.number({attribute: true, default: 750}),
-baseTone: prop.number({attribute: true, default: 32.70375}),
-baseKey: prop.number({attribute: true, default: 0}),
-leftmostKey: prop.number({attribute: true, default: 3*12})*/
-
 </script>
+
+<div class="ctrls" id="controls"></div>
+
+<all-around-keyboard  id="kb" transition-time=0 synth notes-in-octave="12"
+                      raised-notes="[1,3,6,8,10]"
+                      sweep=4 octaves="3"
+                      depth="100" width="500">
+</all-around-keyboard>
+
+<li>who knows?</li>
+
+</ul>
+
+<script src="../lib/all-around-keyboard.js"></script>
+
 
 <style>
   body {
