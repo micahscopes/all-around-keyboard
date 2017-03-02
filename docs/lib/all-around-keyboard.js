@@ -16540,14 +16540,15 @@ var     tau$2 = 2 * Math.PI;
     }
 
     function dampKey(key) {
-      var decay = 0.3;
+      var decay = 0.4;
       // console.log("tone off!!!!");
       var context = window[LILSYNTH];
       if (key.gain) {
         key.gain.gain.setTargetAtTime(0.000001, context.currentTime, 0.05);
+        var gain = key.gain;
         setTimeout(function () {
-          key.gain.disconnect();
-        }, decay * 4);
+          gain.disconnect();
+        }, decay * 1000);
       }
       if (key.oscillator) key.oscillator.stop(context.currentTime + decay);
       if (key.oscillator2) key.oscillator2.stop(context.currentTime + decay);
