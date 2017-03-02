@@ -9,10 +9,11 @@
   - per key styles?
   - envelopes for colors and tones
 * make transitions easier to follow
-  - fade black/white keys
+  - ~~fade black/white keys~~
 * simpler definition for width vs. stroke ratio
 * smooth transition for viewbox so that kb is always in the middle
 * demo with [this badass dx7 emulator](https://github.com/mmontag/dx7-synth-js)
 * lil-synth gain
+* lil-synth envelopes and better voice management
 * make lil-synth a separate project
 * styles
