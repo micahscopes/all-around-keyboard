@@ -4,12 +4,20 @@
 <script src="../../lib/webmidi.min.js"></script>
 
 <h2> MIDI out </h2>
+<em>A listening is waiting for interactions on this
+`all-around-keyboard` element, and sending them via Web MIDI
+to the first available output:</em>
 <all-around-keyboard  notes-in-octave="12"
                       raised-notes="[1,3,6,8,10]"
                       sweep=4 octaves="2"
                       depth=200
                       id="sending">
 </all-around-keyboard>
+
+<p/>
+<em>The following `iframe` element loads an external Web Audio synth,
+which should receive MIDI from this page, as long as the first
+available Web MIDI in/out are a MIDI through connection:</em>
 <iframe src="https://mmontag.github.io/dx7-synth-js/"></iframe>
 
 <script>
@@ -60,9 +68,7 @@ const TRANSPOSE = 0;
 
   all-around-keyboard {
     width: 80%;
-    margin: 50px;
-    margin-top: 50px;
-    margin-bottom: 0px;
+    margin: 0.5em;
     display: inline-block;
     border: solid #4466bb 1px;
     padding: 40px;
