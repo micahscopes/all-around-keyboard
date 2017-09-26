@@ -231,7 +231,8 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       transitionTime: prop.number({attribute: true, default: 750}),
       baseTone: prop.number({attribute: true, default: 32.70375}),
       baseKey: prop.number({attribute: true, default: 0}),
-      leftmostKey: prop.number({attribute: true, default: 3*12})
+      leftmostKey: prop.number({attribute: true, default: 3*12}),
+      keyStyle: prop.string({attribute: true})
     };
   }
   connectedCallback () {
@@ -310,12 +311,13 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       return true;
     } else {
       setupKeyboard.call(this);
+      this.shadowRoot.children[1].innerText = css+this.keyStyle;
       return false;
     }
   }
 
   renderCallback () {
-    return [h('div'),h('style',css)];
+    return [h('div'),h('style',css+this.keyStyle)];
   }
 
   renderedCallback() {

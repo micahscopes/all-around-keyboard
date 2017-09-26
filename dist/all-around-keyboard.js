@@ -9971,6 +9971,13 @@ var nativeTree = Object.freeze({
       serialize: toNullOrString
     });
 
+    var string = create({
+      default: '',
+      coerce: toNullOrString,
+      deserialize: toNullOrString,
+      serialize: toNullOrString
+    });
+
     var $connected = '____skate_connected';
     var $created = '____skate_created';
 
@@ -16841,13 +16848,14 @@ var     tau$2 = 2 * Math.PI;
             return true;
           } else {
             setupKeyboard.call(this);
+            this.shadowRoot.children[1].innerText = css + this.keyStyle;
             return false;
           }
         }
       }, {
         key: 'renderCallback',
         value: function renderCallback() {
-          return [h('div'), h('style', css)];
+          return [h('div'), h('style', css + this.keyStyle)];
         }
       }, {
         key: 'renderedCallback',
@@ -16884,7 +16892,8 @@ var     tau$2 = 2 * Math.PI;
             transitionTime: number({ attribute: true, default: 750 }),
             baseTone: number({ attribute: true, default: 32.70375 }),
             baseKey: number({ attribute: true, default: 0 }),
-            leftmostKey: number({ attribute: true, default: 3 * 12 })
+            leftmostKey: number({ attribute: true, default: 3 * 12 }),
+            keyStyle: string({ attribute: true })
           };
         }
       }]);
