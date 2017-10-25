@@ -8,13 +8,13 @@ a web component for round pianos
 <script src=".../all-around-keyboard.min.js"></script>
 <all-around-keyboard></all-around-keyboard>
 ```
-You can also customize your keyboard with the following attributes:
+You can also customize the keyboard with the following attributes:
 ```html
 <all-around-keyboard  notes-in-octave=12
                       raised-notes="[2,4,7,9,11]"
                       sweep=270 octaves=2
                       depth=100 width=500
-                      overlapping=0.75
+                      overlapping=0.75 >
 </all-around-keyboard>
 ```
 ### Pressing and releasing keys
