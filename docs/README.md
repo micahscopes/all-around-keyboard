@@ -52,4 +52,4 @@ setTimeout(() => { kb.notesDim([2,4,6,7,9,11,1]) }, 4000);
 * *developed by [Micah Fitch](http://github.com/micahscopes)*
 * *[d3.js](https://d3js.org/)*
 * *[skate.js](https://github.com/skatejs/skatejs)*
-* *[mbostock's arc piano gist](https://bl.ocks.org/mbostock/5723d93e4f617b542991) *
+* *[mbostock's arc piano gist](https://bl.ocks.org/mbostock/5723d93e4f617b542991)*
