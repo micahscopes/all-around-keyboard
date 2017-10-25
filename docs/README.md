@@ -9,7 +9,7 @@
                       raised-notes="[2,4,7,9,11]"
                       sweep=270 octaves=4
                       depth=100 width=800
-                      overlapping=0.5
+                      overlapping=0.5 >
 </all-around-keyboard>
 ```
 
