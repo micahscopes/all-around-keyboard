@@ -1,16 +1,15 @@
 ## Usage:
-### Simple
 ```html
 <script src=".../all-around-keyboard.min.js"></script>
 <all-around-keyboard></all-around-keyboard>
 ```
-### Advanced
+### Adjusting attributes
 ```html
 <all-around-keyboard  notes-in-octave=12
                       raised-notes="[2,4,7,9,11]"
-                      sweep=270 octaves=2
-                      depth=100 width=500
-                      overlapping=0.75
+                      sweep=270 octaves=4
+                      depth=100 width=800
+                      overlapping=0.5
 </all-around-keyboard>
 ```
 
