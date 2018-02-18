@@ -26,13 +26,13 @@ export default {
     }),
     babel({
       presets: [
-      ["es2015", {modules: false}],
+      ["env", {modules: false}],
       // ["es2016"]
       ],
       plugins: [
         'transform-class-properties',
         'transform-es2015-destructuring',
-        'external-helpers'
+        'external-helpers',
       ],
       exclude: 'node_modules/babel-runtime/**',
     }),

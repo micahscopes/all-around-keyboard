@@ -7,6 +7,7 @@ import { interpolate } from 'd3-interpolate';
 import { setupLilSynth, soundKey, dampKey } from './lil-synth'
 import { select, selectAll, namespaces, event as currentEvent } from 'd3-selection';
 import css from './style.css'
+import 'regenerator-runtime/runtime';
 
 const setToArray = (set) => {
   return [...set];
@@ -15,6 +16,7 @@ const setToArray = (set) => {
   // return array;
 }
 const KEYBOARD = Symbol();
+const DELIVER_KEYBOARD = Symbol();
 const KEYS = Symbol();
 
 const currentKeyPositions = Symbol();
@@ -38,7 +40,7 @@ function setupKeyboard(){
       Math.pow(outerRadius,2) - Math.pow(chordLength/2,2)) + this.depth*Math.cos(this.sweep/2)
   }
   height += SVGStrokePadding;
-  window.select = select;
+  // window.select = select;
   var svg = this[shadowSVG]
 
   svg.attr("viewBox","0 0 "+this.width+" "+height)
@@ -239,16 +241,29 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
     // Ensure we call the parent.
     super.connectedCallback();
     setupLilSynth(this);
-    // this.synthesizer = new PolySynth(6, Synth).toMaster();
-
     this[pressedKeys] = new Set();
     this[litKeys] = new Set();
     this[litNotes] = new Set();
 
     this[currentKeyPositions] = {};
+    let self = this
+    async function getKB(){
+      return new Promise((resolve, reject) => {
+        function f(){
+          if(self[KEYBOARD]) {
+            resolve(self[KEYBOARD])
+          } else {
+            window.requestAnimationFrame(f)
+          }
+        }
+        f()
+        //setTimeout(()=>reject('no keyboard'),1000)
+      })
+    }
 
-    this.addEventListener(KEYPRESS,function(e){
-      this[KEYBOARD].filter((d)=>d.index == e.index)
+    this.addEventListener(KEYPRESS, async function(e){
+      let kb = await getKB()
+      kb.filter((d)=>d.index == e.index)
       .classed("key--pressed",true)
       .dispatch(KEYPRESS);
       // this.synthesizer.triggerAttack(d.frequency)
@@ -256,8 +271,9 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       this[pressedKeys].add(e.index);
     })
 
-    this.addEventListener(KEYRELEASE,function(e){
-      this[KEYBOARD].filter((d)=>d.index == e.index)
+    this.addEventListener(KEYRELEASE, async function(e){
+      let kb = await getKB()
+      kb.filter((d)=>d.index == e.index)
       .classed("key--pressed",false)
       .dispatch(KEYRELEASE);
       // this.synthesizer.triggerRelease(d.frequency)
@@ -265,37 +281,41 @@ const KeyboardElement = customElements.define('all-around-keyboard', class exten
       this[pressedKeys].delete(e.index);
     })
 
-    this.addEventListener(KEYLIGHT,function(e){
-      this[KEYBOARD].filter((d)=>d.index == e.index)
+    this.addEventListener(KEYLIGHT, async function(e){
+      let kb = await getKB()
+      kb.filter((d)=>d.index == e.index)
       .classed("key--highlight",true)
       .dispatch(KEYLIGHT);
 
       this[litKeys].add(e.index);
     })
 
-    this.addEventListener(KEYDIM,function(e){
-      this[KEYBOARD].filter((d)=>d.index == e.index)
+    this.addEventListener(KEYDIM, async function(e){
+      let kb = await getKB()
+      kb.filter((d)=>d.index == e.index)
       .classed("key--highlight",false)
       .dispatch(KEYDIM);
 
       this[litKeys].delete(e.index);
     })
 
-    this.addEventListener(NOTELIGHT,function(e){
-      this[KEYBOARD].filter((d)=>d.note == e.note)
+    this.addEventListener(NOTELIGHT, async function(e){
+      let kb = await getKB()
+      kb.filter((d)=>d.note == e.note)
       .classed("key--highlight",true)
       .dispatch(NOTELIGHT);
 
       this[litNotes].add(e.note);
     })
 
-    this.addEventListener(NOTEDIM,function(e){
-      this[KEYBOARD].filter((d)=>d.note == e.note)
+    this.addEventListener(NOTEDIM, async function(e){
+      let kb = await getKB()
+      kb.filter((d)=>d.note == e.note)
       .classed("key--highlight",false)
       .dispatch(NOTEDIM);
 
       this[litNotes].delete(e.note);
-    })
+    })    // this.synthesizer = new PolySynth(6, Synth).toMaster();
   }
 
   disconnectedCallback () {
