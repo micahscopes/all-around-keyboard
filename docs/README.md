@@ -1,12 +1,15 @@
-## usage:
+## Usage:
 ```html
 <script src=".../all-around-keyboard.min.js"></script>
-
+<all-around-keyboard></all-around-keyboard>
+```
+### Adjusting attributes
+```html
 <all-around-keyboard  notes-in-octave=12
                       raised-notes="[2,4,7,9,11]"
-                      sweep=270 octaves=2
-                      depth=100 width=500
-                      overlapping=0.75>
+                      sweep=270 octaves=4
+                      depth=100 width=800
+                      overlapping=0.5 >
 </all-around-keyboard>
 ```
 
@@ -48,4 +51,4 @@ setTimeout(() => { kb.notesDim([2,4,6,7,9,11,1]) }, 4000);
 * *developed by [Micah Fitch](http://github.com/micahscopes)*
 * *[d3.js](https://d3js.org/)*
 * *[skate.js](https://github.com/skatejs/skatejs)*
-* *[mbostock's arc piano gist](https://bl.ocks.org/mbostock/5723d93e4f617b542991) *
+* *[mbostock's arc piano gist](https://bl.ocks.org/mbostock/5723d93e4f617b542991)*
