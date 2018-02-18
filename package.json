@@ -1,7 +1,7 @@
 {
   "name": "all-around-keyboard",
   "author": "micahscopes",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Round piano keyboards with Web Components + d3.js",
   "private": true,
   "main": "dist/all-around-keyboard.js",
