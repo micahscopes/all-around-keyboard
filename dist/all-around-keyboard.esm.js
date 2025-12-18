@@ -1180,23 +1180,19 @@ class AllAroundKeyboard extends HTMLElement {
     if (!hasPitch && !hasKey) return;
 
     let pitch;
-    let keyRadius = null; // Will be set for data-key if we can determine it
+    let keyRadius = null;
 
     if (hasKey) {
-      // data-key: snap to key center
       const keyIndex = parseInt(el.dataset.key, 10);
       const keyEntry = this._keyElements.get(keyIndex);
       if (keyEntry) {
-        // Use the actual key center angle
         const params = this._currentParams.get(keyIndex);
         if (params) {
           const midAngle = (params.startAngle + params.endAngle) / 2;
-          // Convert angle back to pitch position
           pitch = ((midAngle - this._geometry.startAngle) /
                    (this._geometry.endAngle - this._geometry.startAngle)) *
                   (this._octaves * this._notesInOctave);
 
-          // Calculate the key's radial center (normalized 0-1)
           const keyMidRadius = (params.innerRadius + params.outerRadius) / 2;
           keyRadius = (keyMidRadius - this._geometry.innerRadius) /
                       (this._geometry.outerRadius - this._geometry.innerRadius);
@@ -1207,11 +1203,9 @@ class AllAroundKeyboard extends HTMLElement {
         pitch = keyIndex - this._leftmostKey;
       }
     } else {
-      // data-pitch: continuous position
       pitch = parseFloat(el.dataset.pitch) || 0;
     }
 
-    // For data-key, use the key's actual radial center unless data-radius is explicitly set
     const hasExplicitRadius = el.hasAttribute('data-radius');
     const radius = hasExplicitRadius
       ? parseFloat(el.dataset.radius)
