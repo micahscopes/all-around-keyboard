@@ -3,35 +3,69 @@
 <script src=".../all-around-keyboard.min.js"></script>
 <all-around-keyboard></all-around-keyboard>
 ```
-### Adjusting attributes
+
+### Configuration attributes
 ```html
-<all-around-keyboard  notes-in-octave=12
-                      raised-notes="[2,4,7,9,11]"
-                      sweep=270 octaves=4
-                      depth=100 width=800
-                      overlapping=0.5 >
+<all-around-keyboard  notes-in-octave="12"
+                      raised-notes="[1,3,6,8,10]"
+                      sweep="270" octaves="4"
+                      depth="100" width="800"
+                      overlapping="0.5">
 </all-around-keyboard>
 ```
 
-### Pressing and releasing keys
-``` javascript
-// select the keyboard
-let kb = document.querySelector('all-around-keyboard');
+### State attributes (declarative control)
+Control key states via attributes - the parent component owns the state:
 
-kb.keysPress([2,6,9,11,18])
-setTimeout(() => { kb.keysRelease([2,6,9,11,18]) }, 4000);
+```html
+<all-around-keyboard pressed-keys="[0,4,7]"
+                     lit-notes="[0,4,7]">
+</all-around-keyboard>
 ```
 
-### Lighting and dimming keys
-``` javascript
-kb.keysLight([2,6,9,11,18])
-setTimeout(() => { kb.keysDim([2,6,9,11,18]) }, 4000);
+Or via JavaScript:
+```javascript
+const kb = document.querySelector('all-around-keyboard');
+
+// Set pressed keys (visual + synth if enabled)
+kb.pressedKeys = [0, 4, 7];
+
+// Highlight notes across all octaves
+kb.litNotes = [0, 4, 7];
+
+// Hover effect
+kb.hoveredKeys = [2];
 ```
 
-### Lighting and dimming notes (pitch classes)
-``` javascript
-kb.notesLight([2,4,6,7,9,11,1])
-setTimeout(() => { kb.notesDim([2,4,6,7,9,11,1]) }, 4000);
+**State attributes:**
+- `pressed-keys` / `pressed-notes` - Pressed visual state
+- `lit-keys` / `lit-notes` - Highlighted visual state
+- `hovered-keys` / `hovered-notes` - Hover visual state
+
+### Events (user interaction)
+```javascript
+kb.addEventListener('keyclick', (e) => {
+  console.log('Clicked:', e.detail.index, 'Note:', e.detail.note);
+});
+
+kb.addEventListener('keyhover', (e) => {
+  console.log('Hover:', e.detail.index);
+});
+
+kb.addEventListener('keyunhover', (e) => {
+  console.log('Unhover:', e.detail.index);
+});
+```
+
+### CSS custom properties
+```css
+all-around-keyboard {
+  --key-lower-fill: white;
+  --key-upper-fill: black;
+  --key-pressed-fill: deeppink;
+  --key-highlight-stroke: blue;
+  --key-hover-opacity: 0.85;
+}
 ```
 
 ## [examples](examples/index.html):
@@ -50,5 +84,4 @@ setTimeout(() => { kb.notesDim([2,4,6,7,9,11,1]) }, 4000);
 ### credits
 * *developed by [Micah Fitch](http://github.com/micahscopes)*
 * *[d3.js](https://d3js.org/)*
-* *[skate.js](https://github.com/skatejs/skatejs)*
 * *[mbostock's arc piano gist](https://bl.ocks.org/mbostock/5723d93e4f617b542991)*

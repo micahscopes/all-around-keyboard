@@ -4,13 +4,13 @@
 <script src="../../lib/webmidi.min.js"></script>
 
 <h2> MIDI out </h2>
-<em>A listening is waiting for interactions on this
+<em>A listener is waiting for interactions on this
 `all-around-keyboard` element, and sending them via Web MIDI
 to the first available output:</em>
 <all-around-keyboard  notes-in-octave="12"
                       raised-notes="[1,3,6,8,10]"
-                      sweep=4 octaves="2"
-                      depth=200
+                      sweep="4" octaves="2"
+                      depth="200"
                       id="sending">
 </all-around-keyboard>
 
@@ -23,19 +23,36 @@ available Web MIDI in/out are a MIDI through connection:</em>
 <script>
 // midi send example
 const TRANSPOSE = 0;
-  WebMidi.enable(function (err) {
-    if (err) { console.log("WebMidi could not be enabled.", err); }
-    var midiOut = WebMidi.outputs[0];
-    var midiIn = WebMidi.inputs[0];
+const pressedKeys = new Set();
 
-    let kb = document.querySelector('all-around-keyboard#sending');
-    kb.addEventListener('keypress',function(e){
-      midiOut.playNote(e.index+TRANSPOSE);
-    });
-    kb.addEventListener('keyrelease',function(e){
-      midiOut.stopNote(e.index+TRANSPOSE);
-    });
+WebMidi.enable(function (err) {
+  if (err) { console.log("WebMidi could not be enabled.", err); }
+  var midiOut = WebMidi.outputs[0];
+
+  const kb = document.querySelector('all-around-keyboard#sending');
+
+  kb.addEventListener('keyclick', function(e) {
+    const noteNum = e.detail.index + TRANSPOSE;
+    if (pressedKeys.has(e.detail.index)) {
+      // Note is currently on, turn it off
+      pressedKeys.delete(e.detail.index);
+      midiOut.stopNote(noteNum);
+    } else {
+      // Note is off, turn it on
+      pressedKeys.add(e.detail.index);
+      midiOut.playNote(noteNum);
+    }
+    kb.pressedKeys = [...pressedKeys];
   });
+
+  // Show hover feedback
+  kb.addEventListener('keyhover', function(e) {
+    kb.hoveredKeys = [e.detail.index];
+  });
+  kb.addEventListener('keyunhover', function() {
+    kb.hoveredKeys = [];
+  });
+});
 
 </script>
 

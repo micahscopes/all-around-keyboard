@@ -694,7 +694,7 @@ var AllAroundKeyboard = (function (exports) {
     if(key.oscillator2) key.oscillator2.stop(context.currentTime + decay);
   }
 
-  var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n}\n.key {\n  stroke-width: 1.5px;\n}\n\n.key--lower { fill: white; stroke: #777;\n}\n.key--upper { fill: black; stroke: #000;\n}\n\n.key, .key--modulating {\n  transition: fill;\n  transition-duration: 1s;\n  transition-delay: 1s;\n  transition-timing-function: ease-in-out;\n}\n\n.key:not(.key--modulating) {\n  transition-delay: 0s !important;\n  transition-duration: 0.1s !important;\n}\n\n.key:not(.key--modulating).key--highlight, .key:not(.key--modulating).key--pressed {\n  transition-duration: 0s !important;\n}\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower\n  { fill: deeppink; }\n\n.key--highlight {\n  stroke: rgba(0, 91, 255, 0.73);\n  stroke-width: 5.5px;\n}\n\n.key--highlight.key--lower { fill: rgb(215, 237, 249) }\n.key--highlight.key--upper { fill: #495b96 }\n";
+  var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  padding: 5px;\n\n  /* CSS Custom Properties - override these to customize */\n  --key-lower-fill: white;\n  --key-lower-stroke: #777;\n  --key-upper-fill: black;\n  --key-upper-stroke: #000;\n  --key-pressed-fill: deeppink;\n  --key-highlight-stroke: rgba(0, 91, 255, 0.73);\n  --key-highlight-stroke-width: 5.5px;\n  --key-highlight-lower-fill: rgb(215, 237, 249);\n  --key-highlight-upper-fill: #495b96;\n  --key-hover-opacity: 0.85;\n  --key-stroke-width: 1.5px;\n  --key-focus-outline: 2px solid #005bff;\n  --key-focus-outline-offset: 2px;\n}\n\n.key {\n  stroke-width: var(--key-stroke-width);\n  cursor: pointer;\n  outline: none;\n}\n\n.key:focus-visible {\n  outline: var(--key-focus-outline);\n  outline-offset: var(--key-focus-outline-offset);\n}\n\n.key--lower {\n  fill: var(--key-lower-fill);\n  stroke: var(--key-lower-stroke);\n}\n.key--upper {\n  fill: var(--key-upper-fill);\n  stroke: var(--key-upper-stroke);\n}\n\n.key--hover.key--lower {\n  opacity: var(--key-hover-opacity);\n}\n.key--hover.key--upper {\n  opacity: var(--key-hover-opacity);\n}\n\n.key, .key--modulating {\n  transition: fill;\n  transition-duration: 1s;\n  transition-delay: 1s;\n  transition-timing-function: ease-in-out;\n}\n\n.key:not(.key--modulating) {\n  transition-delay: 0s !important;\n  transition-duration: 0.1s !important;\n}\n\n.key:not(.key--modulating).key--highlight, .key:not(.key--modulating).key--pressed {\n  transition-duration: 0s !important;\n}\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower {\n  fill: var(--key-pressed-fill);\n}\n\n.key--highlight {\n  stroke: var(--key-highlight-stroke);\n  stroke-width: var(--key-highlight-stroke-width);\n}\n\n.key--highlight.key--lower { fill: var(--key-highlight-lower-fill); }\n.key--highlight.key--upper { fill: var(--key-highlight-upper-fill); }\n";
 
   const SVGStrokePadding = 15;
   const SVGNS = 'http://www.w3.org/2000/svg';
@@ -762,9 +762,10 @@ var AllAroundKeyboard = (function (exports) {
     static observedAttributes = [
       'notes-in-octave', 'raised-notes', 'octaves', 'sweep', 'depth',
       'width', 'overlapping', 'pie', 'synth', 'transition-time',
-      'base-tone', 'base-key', 'leftmost-key', 'key-style',
+      'base-tone', 'base-key', 'leftmost-key',
       // State attributes (input)
-      'pressed-keys', 'lit-keys', 'pressed-notes', 'lit-notes'
+      'pressed-keys', 'lit-keys', 'pressed-notes', 'lit-notes',
+      'hovered-keys', 'hovered-notes'
     ];
 
     constructor() {
@@ -785,18 +786,19 @@ var AllAroundKeyboard = (function (exports) {
       this._baseTone = 32.70375;
       this._baseKey = 0;
       this._leftmostKey = 3 * 12;
-      this._keyStyle = '';
 
       // State (driven by attributes)
       this._pressedKeys = new Set();
       this._litKeys = new Set();
       this._pressedNotes = new Set();
       this._litNotes = new Set();
+      this._hoveredKeys = new Set();
+      this._hoveredNotes = new Set();
 
       // Internal
       this._keyElements = new Map(); // index -> {el, data}
       this._currentParams = new Map(); // index -> arc params for animation
-      this._hoveredKey = null; // track hover for click detection
+      this._focusedKeyIndex = null; // for keyboard navigation
     }
 
     // Property getters/setters with attribute sync
@@ -842,9 +844,6 @@ var AllAroundKeyboard = (function (exports) {
     get leftmostKey() { return this._leftmostKey; }
     set leftmostKey(v) { this._leftmostKey = Number(v); this._scheduleUpdate(); }
 
-    get keyStyle() { return this._keyStyle; }
-    set keyStyle(v) { this._keyStyle = v; this._updateStyle(); }
-
     // State attribute getters/setters
     get pressedKeys() { return [...this._pressedKeys]; }
     set pressedKeys(v) {
@@ -870,6 +869,18 @@ var AllAroundKeyboard = (function (exports) {
       this._applyKeyStates();
     }
 
+    get hoveredKeys() { return [...this._hoveredKeys]; }
+    set hoveredKeys(v) {
+      this._hoveredKeys = new Set(Array.isArray(v) ? v : parseArrayAttr(v));
+      this._applyKeyStates();
+    }
+
+    get hoveredNotes() { return [...this._hoveredNotes]; }
+    set hoveredNotes(v) {
+      this._hoveredNotes = new Set(Array.isArray(v) ? v : parseArrayAttr(v));
+      this._applyKeyStates();
+    }
+
     attributeChangedCallback(name, oldVal, newVal) {
       if (oldVal === newVal) return;
       const propName = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -890,11 +901,16 @@ var AllAroundKeyboard = (function (exports) {
 
     _setupDOM() {
       const style = document.createElement('style');
-      style.textContent = css + this._keyStyle;
-      this._styleEl = style;
+      style.textContent = css;
 
       const container = document.createElement('div');
+      container.setAttribute('role', 'application');
+      container.setAttribute('aria-label', 'Musical keyboard');
+
       const svg = svgEl('svg', { width: '100%' });
+      svg.setAttribute('role', 'group');
+      svg.setAttribute('aria-label', 'Piano keys');
+
       const g = svgEl('g');
       svg.appendChild(g);
       container.appendChild(svg);
@@ -904,12 +920,6 @@ var AllAroundKeyboard = (function (exports) {
 
       this._svg = svg;
       this._g = g;
-    }
-
-    _updateStyle() {
-      if (this._styleEl) {
-        this._styleEl.textContent = css + this._keyStyle;
-      }
     }
 
     _scheduleUpdate() {
@@ -923,15 +933,40 @@ var AllAroundKeyboard = (function (exports) {
       });
     }
 
-    // Apply pressed/lit states to all keys based on current attribute values
+    // Get note name for accessibility
+    _getNoteName(noteNum) {
+      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const octave = Math.floor(noteNum / this._notesInOctave);
+      const note = noteNum % this._notesInOctave;
+      return `${noteNames[note] || `Note ${note}`}${octave}`;
+    }
+
+    // Focus adjacent key for keyboard navigation
+    _focusAdjacentKey(currentIndex, direction) {
+      const indices = [...this._keyElements.keys()].sort((a, b) => a - b);
+      const currentPos = indices.indexOf(currentIndex);
+      const nextPos = currentPos + direction;
+      if (nextPos >= 0 && nextPos < indices.length) {
+        const nextIndex = indices[nextPos];
+        const nextKey = this._keyElements.get(nextIndex);
+        if (nextKey) nextKey.el.focus();
+      }
+    }
+
+    // Apply pressed/lit/hover states to all keys based on current attribute values
     _applyKeyStates() {
       for (const [index, keyData] of this._keyElements) {
         const note = keyData.data.note;
         const isPressed = this._pressedKeys.has(index) || this._pressedNotes.has(note);
         const isLit = this._litKeys.has(index) || this._litNotes.has(note);
+        const isHovered = this._hoveredKeys.has(index) || this._hoveredNotes.has(note);
 
         keyData.el.classList.toggle('key--pressed', isPressed);
         keyData.el.classList.toggle('key--highlight', isLit);
+        keyData.el.classList.toggle('key--hover', isHovered);
+
+        // ARIA state
+        keyData.el.setAttribute('aria-pressed', isPressed ? 'true' : 'false');
 
         // Synth integration
         if (this._synth) {
@@ -1036,48 +1071,79 @@ var AllAroundKeyboard = (function (exports) {
           this._currentParams.set(d.index, newParams);
           existing.data = d;
         } else {
-          // Create new key
+          // Create new key with ARIA attributes
+          const noteName = this._getNoteName(d.note);
           const el = svgEl('path', {
             class: `key ${d.raised ? 'key--upper' : 'key--lower'}`,
-            d: drawArc(newParams)
+            d: drawArc(newParams),
+            tabindex: '0',
+            role: 'button',
+            'aria-label': `${noteName} key`,
+            'aria-pressed': 'false'
           });
+
+          // Event options for bubbling through shadow DOM
+          const eventOpts = { bubbles: true, composed: true };
 
           // Event handlers - emit events, don't manage state
           el.addEventListener('mouseenter', (e) => {
             e.preventDefault();
-            this._hoveredKey = d.index;
-            const evt = new CustomEvent(KEYHOVER, { detail: { index: d.index, note: d.note } });
+            this._focusedKeyIndex = d.index;
+            const evt = new CustomEvent(KEYHOVER, { ...eventOpts, detail: { index: d.index, note: d.note } });
             this.dispatchEvent(evt);
           });
 
           el.addEventListener('mouseleave', (e) => {
             e.preventDefault();
-            this._hoveredKey = null;
-            const evt = new CustomEvent(KEYUNHOVER, { detail: { index: d.index, note: d.note } });
+            this._focusedKeyIndex = null;
+            const evt = new CustomEvent(KEYUNHOVER, { ...eventOpts, detail: { index: d.index, note: d.note } });
             this.dispatchEvent(evt);
           });
 
-          el.addEventListener('mouseup', (e) => {
+          el.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            // Only emit click if we're still hovering this key
-            if (this._hoveredKey === d.index) {
-              const evt = new CustomEvent(KEYCLICK, { detail: { index: d.index, note: d.note } });
-              this.dispatchEvent(evt);
-            }
+            const evt = new CustomEvent(KEYCLICK, { ...eventOpts, detail: { index: d.index, note: d.note } });
+            this.dispatchEvent(evt);
           });
 
           el.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            const evt = new CustomEvent(KEYHOVER, { detail: { index: d.index, note: d.note } });
+            const evt = new CustomEvent(KEYHOVER, { ...eventOpts, detail: { index: d.index, note: d.note } });
             this.dispatchEvent(evt);
           }, { passive: false });
 
           el.addEventListener('touchend', (e) => {
             e.preventDefault();
-            const evt = new CustomEvent(KEYCLICK, { detail: { index: d.index, note: d.note } });
+            const evt = new CustomEvent(KEYCLICK, { ...eventOpts, detail: { index: d.index, note: d.note } });
             this.dispatchEvent(evt);
-            const unhoverEvt = new CustomEvent(KEYUNHOVER, { detail: { index: d.index, note: d.note } });
+            const unhoverEvt = new CustomEvent(KEYUNHOVER, { ...eventOpts, detail: { index: d.index, note: d.note } });
             this.dispatchEvent(unhoverEvt);
+          });
+
+          // Keyboard navigation
+          el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              const evt = new CustomEvent(KEYCLICK, { ...eventOpts, detail: { index: d.index, note: d.note } });
+              this.dispatchEvent(evt);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              this._focusAdjacentKey(d.index, -1);
+            } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              this._focusAdjacentKey(d.index, 1);
+            }
+          });
+
+          el.addEventListener('focus', () => {
+            this._focusedKeyIndex = d.index;
+            const evt = new CustomEvent(KEYHOVER, { ...eventOpts, detail: { index: d.index, note: d.note } });
+            this.dispatchEvent(evt);
+          });
+
+          el.addEventListener('blur', () => {
+            const evt = new CustomEvent(KEYUNHOVER, { ...eventOpts, detail: { index: d.index, note: d.note } });
+            this.dispatchEvent(evt);
           });
 
           this._g.appendChild(el);

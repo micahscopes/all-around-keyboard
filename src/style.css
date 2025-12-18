@@ -5,14 +5,48 @@ all-around-keyboard {
 :host {
   display: block;
   padding: 5px;
-}
-.key {
-  stroke-width: 1.5px;
+
+  /* CSS Custom Properties - override these to customize */
+  --key-lower-fill: white;
+  --key-lower-stroke: #777;
+  --key-upper-fill: black;
+  --key-upper-stroke: #000;
+  --key-pressed-fill: deeppink;
+  --key-highlight-stroke: rgba(0, 91, 255, 0.73);
+  --key-highlight-stroke-width: 5.5px;
+  --key-highlight-lower-fill: rgb(215, 237, 249);
+  --key-highlight-upper-fill: #495b96;
+  --key-hover-opacity: 0.85;
+  --key-stroke-width: 1.5px;
+  --key-focus-outline: 2px solid #005bff;
+  --key-focus-outline-offset: 2px;
 }
 
-.key--lower { fill: white; stroke: #777;
+.key {
+  stroke-width: var(--key-stroke-width);
+  cursor: pointer;
+  outline: none;
 }
-.key--upper { fill: black; stroke: #000;
+
+.key:focus-visible {
+  outline: var(--key-focus-outline);
+  outline-offset: var(--key-focus-outline-offset);
+}
+
+.key--lower {
+  fill: var(--key-lower-fill);
+  stroke: var(--key-lower-stroke);
+}
+.key--upper {
+  fill: var(--key-upper-fill);
+  stroke: var(--key-upper-stroke);
+}
+
+.key--hover.key--lower {
+  opacity: var(--key-hover-opacity);
+}
+.key--hover.key--upper {
+  opacity: var(--key-hover-opacity);
 }
 
 .key, .key--modulating {
@@ -33,13 +67,14 @@ all-around-keyboard {
 
 .key--pressed,
 .key--highlight.key--pressed.key--upper,
-.key--highlight.key--pressed.key--lower
-  { fill: deeppink; }
-
-.key--highlight {
-  stroke: rgba(0, 91, 255, 0.73);
-  stroke-width: 5.5px;
+.key--highlight.key--pressed.key--lower {
+  fill: var(--key-pressed-fill);
 }
 
-.key--highlight.key--lower { fill: rgb(215, 237, 249) }
-.key--highlight.key--upper { fill: #495b96 }
+.key--highlight {
+  stroke: var(--key-highlight-stroke);
+  stroke-width: var(--key-highlight-stroke-width);
+}
+
+.key--highlight.key--lower { fill: var(--key-highlight-lower-fill); }
+.key--highlight.key--upper { fill: var(--key-highlight-upper-fill); }

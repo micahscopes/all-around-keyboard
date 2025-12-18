@@ -9,10 +9,14 @@ from the first available Web MIDI input.
 // midi receive example
 
   var keyboards = {};
+  var pressedKeys = {}; // Track pressed keys per channel
+  var litNotes = {};    // Track lit notes per channel
   var row, grid;
+
   grid = document.createElement("div");
   grid.setAttribute("id","kb-table");
   document.body.appendChild(grid);
+
   for(var ch=1; ch<=16; ch++){
     if(ch%4 == 1){
       row = document.createElement("div");
@@ -29,22 +33,28 @@ from the first available Web MIDI input.
     kb.sweep = Math.PI*2;
     row.appendChild(kb);
     keyboards[ch] = kb;
+    pressedKeys[ch] = new Set();
+    litNotes[ch] = new Set();
   }
 
   WebMidi.enable(function (err) {
     if (err) { console.log("WebMidi could not be enabled.", err); }
     var midiIn = WebMidi.inputs[0];
 
-    let kb = document.querySelector('all-around-keyboard#receiving');
-
     midiIn.addListener('noteon', 'all', function (e) {
-        keyboards[e.channel].keysPress(e.note.number);
-        keyboards[e.channel].notesLight(e.note.number%12);
+        const ch = e.channel;
+        pressedKeys[ch].add(e.note.number);
+        litNotes[ch].add(e.note.number % 12);
+        keyboards[ch].pressedKeys = [...pressedKeys[ch]];
+        keyboards[ch].litNotes = [...litNotes[ch]];
     });
 
     midiIn.addListener('noteoff', 'all', function (e) {
-        keyboards[e.channel].keysRelease(e.note.number);
-        keyboards[e.channel].notesDim(e.note.number%12);
+        const ch = e.channel;
+        pressedKeys[ch].delete(e.note.number);
+        litNotes[ch].delete(e.note.number % 12);
+        keyboards[ch].pressedKeys = [...pressedKeys[ch]];
+        keyboards[ch].litNotes = [...litNotes[ch]];
     });
   });
 
