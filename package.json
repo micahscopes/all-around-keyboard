@@ -1,58 +1,56 @@
 {
   "name": "all-around-keyboard",
   "author": "micahscopes",
-  "version": "0.9.2",
-  "description": "Round piano keyboards with Web Components + d3.js",
-  "private": true,
+  "version": "1.9.0",
+  "description": "Round piano keyboards with Web Components + d3-shape",
+  "type": "module",
   "main": "dist/all-around-keyboard.js",
-  "jsnext:main": "src/main.js",
-  "minified:main": "dist/all-around-keyboard.min.js",
+  "module": "dist/all-around-keyboard.esm.js",
+  "browser": "dist/all-around-keyboard.min.js",
+  "unpkg": "dist/all-around-keyboard.min.js",
+  "jsdelivr": "dist/all-around-keyboard.min.js",
+  "exports": {
+    ".": {
+      "import": "./dist/all-around-keyboard.esm.js",
+      "require": "./dist/all-around-keyboard.js",
+      "browser": "./dist/all-around-keyboard.min.js",
+      "default": "./dist/all-around-keyboard.esm.js"
+    },
+    "./min": {
+      "import": "./dist/all-around-keyboard.esm.min.js",
+      "require": "./dist/all-around-keyboard.min.js",
+      "default": "./dist/all-around-keyboard.esm.min.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
-    "eslint": "eslint src",
-    "docs": "cp -r dist/* docs/lib/",
-    "build": "npm-run-all transpile minify docs",
-    "transpile": "rollup -c rollup.config.js",
-    "minify": "uglifyjs -cm -o $npm_package_minified_main -- $npm_package_main",
-    "watch": "chokidar 'src/**' -c 'rollup -c'"
+    "build": "rollup -c",
+    "watch": "rollup -c -w",
+    "docs": "cp dist/all-around-keyboard.js dist/all-around-keyboard.min.js docs/lib/"
   },
   "dependencies": {
-    "babel-polyfill": "^6.26.0",
-    "babel-runtime": "^6.26.0",
-    "d3-color": "^1.0.1",
-    "d3-interpolate": "^1.1.1",
-    "d3-scale": "^1.0.3",
-    "d3-selection": "^1.0.2",
-    "d3-shape": "^1.0.3",
-    "d3-svg": "^0.2.0",
-    "d3-transition": "^1.0.3",
-    "regenerator-runtime": "^0.11.1",
-    "skatejs": "^4.6.7",
-    "skatejs-web-components": "micahscopes/web-components#newer-dependencies"
+    "d3-shape": "^3.2.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.23.0",
-    "babel-eslint": "^7.1.1",
-    "babel-plugin-external-helpers": "^6.18.0",
-    "babel-plugin-transform-class-properties": "^6.23.0",
-    "babel-plugin-transform-es2015-destructuring": "^6.23.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-es2015-rollup": "^3.0.0",
-    "babel-preset-es2016": "^6.22.0",
-    "babel-preset-latest": "^6.22.0",
-    "babelrc-rollup": "^3.0.0",
-    "chokidar-cli": "^1.2.0",
-    "eslint-config-es2015": "^1.1.0",
-    "eslint-plugin-import": "^2.2.0",
-    "npm-run-all": "^4.0.0",
-    "rollup": "^0.31.2",
-    "rollup-plugin-babel": "^2.4.0",
-    "rollup-plugin-buble": "^0.15.0",
-    "rollup-plugin-commonjs": "^3.0.0",
-    "rollup-plugin-eslint": "^3.0.0",
-    "rollup-plugin-node-resolve": "^1.7.0",
-    "rollup-plugin-string": "^2.0.2",
-    "uglify-js": "^2.7.3"
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.9.0",
+    "rollup-plugin-string": "^3.0.0"
+  },
+  "keywords": [
+    "keyboard",
+    "piano",
+    "music",
+    "web-components",
+    "custom-elements",
+    "svg"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/micahscopes/all-around-keyboard"
   },
   "license": "MIT"
 }
