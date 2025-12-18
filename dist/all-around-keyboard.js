@@ -1379,14 +1379,10 @@ var AllAroundKeyboard = (function (exports) {
         return null;
       }
 
-      // Find which key contains this angle
-      for (const [index, keyData] of this._keyElements) {
-        const params = this._currentParams.get(index);
-        if (!params) continue;
-
-        // Check angle (handle wrap-around)
-        let keyStart = params.startAngle;
-        let keyEnd = params.endAngle;
+      // Helper to check if point is within a key
+      const isInKey = (params) => {
+        const keyStart = params.startAngle;
+        const keyEnd = params.endAngle;
 
         // Normalize angles to same range as our calculated angle
         const normalizedAngle = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -1403,13 +1399,26 @@ var AllAroundKeyboard = (function (exports) {
 
         // Check radius
         const inRadiusRange = radius >= params.innerRadius && radius <= params.outerRadius;
+        return inAngleRange && inRadiusRange;
+      };
 
-        if (inAngleRange && inRadiusRange) {
-          return {
-            index: index,
-            note: keyData.data.note,
-            raised: keyData.data.raised
-          };
+      // Check black (raised) keys first since they're rendered on top
+      for (const [index, keyData] of this._keyElements) {
+        if (!keyData.data.raised) continue;
+        const params = this._currentParams.get(index);
+        if (!params) continue;
+        if (isInKey(params)) {
+          return { index, note: keyData.data.note, raised: true };
+        }
+      }
+
+      // Then check white (lower) keys
+      for (const [index, keyData] of this._keyElements) {
+        if (keyData.data.raised) continue;
+        const params = this._currentParams.get(index);
+        if (!params) continue;
+        if (isInKey(params)) {
+          return { index, note: keyData.data.note, raised: false };
         }
       }
 
