@@ -45,6 +45,13 @@ all-around-keyboard {
   left: var(--indicator-x, 50%);
   top: var(--indicator-y, 50%);
   transform: translate(-50%, -50%);
+  /* Hide until keyboard has positioned (sets data-positioned attribute) */
+  visibility: hidden;
+}
+
+/* Show indicators once positioned by keyboard */
+::slotted([data-positioned]) {
+  visibility: visible;
 }
 
 .key {
