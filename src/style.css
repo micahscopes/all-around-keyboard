@@ -38,12 +38,12 @@ all-around-keyboard {
   overflow: visible;
 }
 
-/* Slotted indicator children */
+/* Slotted indicator children - positioned via CSS custom properties */
 ::slotted([data-pitch]),
 ::slotted([data-key]) {
   position: absolute;
-  left: var(--indicator-x, 0);
-  top: var(--indicator-y, 0);
+  left: var(--indicator-x, 50%);
+  top: var(--indicator-y, 50%);
   transform: translate(-50%, -50%);
 }
 

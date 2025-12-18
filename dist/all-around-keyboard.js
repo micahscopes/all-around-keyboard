@@ -694,7 +694,7 @@ var AllAroundKeyboard = (function (exports) {
     if(key.oscillator2) key.oscillator2.stop(context.currentTime + decay);
   }
 
-  var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  position: relative; /* Containing block for slotted absolute children */\n  padding: 5px;\n\n  /* CSS Custom Properties - override these to customize */\n  --key-lower-fill: white;\n  --key-lower-stroke: #777;\n  --key-upper-fill: black;\n  --key-upper-stroke: #000;\n  --key-pressed-fill: deeppink;\n  --key-highlight-stroke: rgba(0, 91, 255, 0.73);\n  --key-highlight-stroke-width: 5.5px;\n  --key-highlight-lower-fill: rgb(215, 237, 249);\n  --key-highlight-upper-fill: #495b96;\n  --key-hover-opacity: 0.85;\n  --key-stroke-width: 1.5px;\n  --key-focus-outline: 2px solid #005bff;\n  --key-focus-outline-offset: 2px;\n}\n\n/* Container layout for indicator positioning */\n.keyboard-container {\n  position: relative;\n}\n\n.indicator-container {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  pointer-events: none; /* Allow clicks through to keyboard */\n  overflow: visible;\n}\n\n/* Slotted indicator children */\n::slotted([data-pitch]),\n::slotted([data-key]) {\n  position: absolute;\n  left: var(--indicator-x, 0);\n  top: var(--indicator-y, 0);\n  transform: translate(-50%, -50%);\n}\n\n.key {\n  stroke-width: var(--key-stroke-width);\n  cursor: pointer;\n  outline: none;\n}\n\n.key:focus-visible {\n  outline: var(--key-focus-outline);\n  outline-offset: var(--key-focus-outline-offset);\n}\n\n.key--lower {\n  fill: var(--key-lower-fill);\n  stroke: var(--key-lower-stroke);\n}\n.key--upper {\n  fill: var(--key-upper-fill);\n  stroke: var(--key-upper-stroke);\n}\n\n.key--hover.key--lower {\n  opacity: var(--key-hover-opacity);\n}\n.key--hover.key--upper {\n  opacity: var(--key-hover-opacity);\n}\n\n.key, .key--modulating {\n  transition: fill;\n  transition-duration: 1s;\n  transition-delay: 1s;\n  transition-timing-function: ease-in-out;\n}\n\n.key:not(.key--modulating) {\n  transition-delay: 0s !important;\n  transition-duration: 0.1s !important;\n}\n\n.key:not(.key--modulating).key--highlight, .key:not(.key--modulating).key--pressed {\n  transition-duration: 0s !important;\n}\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower {\n  fill: var(--key-pressed-fill);\n}\n\n.key--highlight {\n  stroke: var(--key-highlight-stroke);\n  stroke-width: var(--key-highlight-stroke-width);\n}\n\n.key--highlight.key--lower { fill: var(--key-highlight-lower-fill); }\n.key--highlight.key--upper { fill: var(--key-highlight-upper-fill); }\n\n/* Key labels */\n.key-label {\n  font-family: var(--key-label-font, system-ui, -apple-system, sans-serif);\n  font-size: var(--key-label-font-size, 12px);\n  font-weight: var(--key-label-font-weight, 500);\n  user-select: none;\n}\n\n.key-label--lower {\n  fill: var(--key-label-lower-fill, #333);\n}\n\n.key-label--upper {\n  fill: var(--key-label-upper-fill, #fff);\n}\n";
+  var css = "all-around-keyboard {\n  display: block;\n  padding: 5px;\n}\n:host {\n  display: block;\n  position: relative; /* Containing block for slotted absolute children */\n  padding: 5px;\n\n  /* CSS Custom Properties - override these to customize */\n  --key-lower-fill: white;\n  --key-lower-stroke: #777;\n  --key-upper-fill: black;\n  --key-upper-stroke: #000;\n  --key-pressed-fill: deeppink;\n  --key-highlight-stroke: rgba(0, 91, 255, 0.73);\n  --key-highlight-stroke-width: 5.5px;\n  --key-highlight-lower-fill: rgb(215, 237, 249);\n  --key-highlight-upper-fill: #495b96;\n  --key-hover-opacity: 0.85;\n  --key-stroke-width: 1.5px;\n  --key-focus-outline: 2px solid #005bff;\n  --key-focus-outline-offset: 2px;\n}\n\n/* Container layout for indicator positioning */\n.keyboard-container {\n  position: relative;\n}\n\n.indicator-container {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  pointer-events: none; /* Allow clicks through to keyboard */\n  overflow: visible;\n}\n\n/* Slotted indicator children - positioned via CSS custom properties */\n::slotted([data-pitch]),\n::slotted([data-key]) {\n  position: absolute;\n  left: var(--indicator-x, 50%);\n  top: var(--indicator-y, 50%);\n  transform: translate(-50%, -50%);\n}\n\n.key {\n  stroke-width: var(--key-stroke-width);\n  cursor: pointer;\n  outline: none;\n}\n\n.key:focus-visible {\n  outline: var(--key-focus-outline);\n  outline-offset: var(--key-focus-outline-offset);\n}\n\n.key--lower {\n  fill: var(--key-lower-fill);\n  stroke: var(--key-lower-stroke);\n}\n.key--upper {\n  fill: var(--key-upper-fill);\n  stroke: var(--key-upper-stroke);\n}\n\n.key--hover.key--lower {\n  opacity: var(--key-hover-opacity);\n}\n.key--hover.key--upper {\n  opacity: var(--key-hover-opacity);\n}\n\n.key, .key--modulating {\n  transition: fill;\n  transition-duration: 1s;\n  transition-delay: 1s;\n  transition-timing-function: ease-in-out;\n}\n\n.key:not(.key--modulating) {\n  transition-delay: 0s !important;\n  transition-duration: 0.1s !important;\n}\n\n.key:not(.key--modulating).key--highlight, .key:not(.key--modulating).key--pressed {\n  transition-duration: 0s !important;\n}\n\n.key--pressed,\n.key--highlight.key--pressed.key--upper,\n.key--highlight.key--pressed.key--lower {\n  fill: var(--key-pressed-fill);\n}\n\n.key--highlight {\n  stroke: var(--key-highlight-stroke);\n  stroke-width: var(--key-highlight-stroke-width);\n}\n\n.key--highlight.key--lower { fill: var(--key-highlight-lower-fill); }\n.key--highlight.key--upper { fill: var(--key-highlight-upper-fill); }\n\n/* Key labels */\n.key-label {\n  font-family: var(--key-label-font, system-ui, -apple-system, sans-serif);\n  font-size: var(--key-label-font-size, 12px);\n  font-weight: var(--key-label-font-weight, 500);\n  user-select: none;\n}\n\n.key-label--lower {\n  fill: var(--key-label-lower-fill, #333);\n}\n\n.key-label--upper {\n  fill: var(--key-label-upper-fill, #fff);\n}\n";
 
   const SVGStrokePadding = 15;
   const SVGNS = 'http://www.w3.org/2000/svg';
@@ -703,6 +703,8 @@ var AllAroundKeyboard = (function (exports) {
   const KEYCLICK = 'keyclick';
   const KEYHOVER = 'keyhover';
   const KEYUNHOVER = 'keyunhover';
+  const KEYPOINTERDOWN = 'keypointerdown';
+  const KEYPOINTERUP = 'keypointerup';
 
   // Helper to create SVG elements
   function svgEl(tag, attrs = {}) {
@@ -1195,6 +1197,7 @@ var AllAroundKeyboard = (function (exports) {
         // For data-key: use the key's actual geometry directly
         const keyIndex = parseInt(el.dataset.key, 10);
         const keyEntry = this._keyElements.get(keyIndex);
+        console.log('[all-around-keyboard] _updateIndicator: keyIndex=', keyIndex, 'found=', !!keyEntry, 'leftmostKey=', this._leftmostKey, 'keyElements.keys=', [...this._keyElements.keys()]);
         if (keyEntry) {
           const params = this._currentParams.get(keyIndex);
           if (params) {
@@ -1319,6 +1322,8 @@ var AllAroundKeyboard = (function (exports) {
       el.style.setProperty('--indicator-angle', `${angle * 180 / Math.PI}deg`);
       el.style.setProperty('--indicator-pitch', pitch);
       el.style.setProperty('--indicator-radius', radius);
+      // Mark as positioned so CSS can show it
+      el.setAttribute('data-positioned', '');
     }
 
     // Focus adjacent key for keyboard navigation
@@ -1506,6 +1511,41 @@ var AllAroundKeyboard = (function (exports) {
           el.addEventListener('mousedown', (e) => {
             e.preventDefault();
             const evt = new CustomEvent(KEYCLICK, { ...eventOpts, detail: { index: d.index, note: d.note } });
+            this.dispatchEvent(evt);
+          });
+
+          // Pointer events with full detail (for drag-drop detection)
+          el.addEventListener('pointerdown', (e) => {
+            this._currentParams.get(d.index);
+            const evt = new CustomEvent(KEYPOINTERDOWN, {
+              ...eventOpts,
+              detail: {
+                index: d.index,
+                note: d.note,
+                frequency: d.frequency,
+                raised: d.raised,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                pointerId: e.pointerId
+              }
+            });
+            this.dispatchEvent(evt);
+          });
+
+          el.addEventListener('pointerup', (e) => {
+            this._currentParams.get(d.index);
+            const evt = new CustomEvent(KEYPOINTERUP, {
+              ...eventOpts,
+              detail: {
+                index: d.index,
+                note: d.note,
+                frequency: d.frequency,
+                raised: d.raised,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                pointerId: e.pointerId
+              }
+            });
             this.dispatchEvent(evt);
           });
 

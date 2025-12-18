@@ -10,6 +10,8 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 const KEYCLICK = 'keyclick';
 const KEYHOVER = 'keyhover';
 const KEYUNHOVER = 'keyunhover';
+const KEYPOINTERDOWN = 'keypointerdown';
+const KEYPOINTERUP = 'keypointerup';
 
 // Helper to create SVG elements
 function svgEl(tag, attrs = {}) {
@@ -502,6 +504,7 @@ class AllAroundKeyboard extends HTMLElement {
       // For data-key: use the key's actual geometry directly
       const keyIndex = parseInt(el.dataset.key, 10);
       const keyEntry = this._keyElements.get(keyIndex);
+      console.log('[all-around-keyboard] _updateIndicator: keyIndex=', keyIndex, 'found=', !!keyEntry, 'leftmostKey=', this._leftmostKey, 'keyElements.keys=', [...this._keyElements.keys()]);
       if (keyEntry) {
         const params = this._currentParams.get(keyIndex);
         if (params) {
@@ -626,6 +629,8 @@ class AllAroundKeyboard extends HTMLElement {
     el.style.setProperty('--indicator-angle', `${angle * 180 / Math.PI}deg`);
     el.style.setProperty('--indicator-pitch', pitch);
     el.style.setProperty('--indicator-radius', radius);
+    // Mark as positioned so CSS can show it
+    el.setAttribute('data-positioned', '');
   }
 
   // Focus adjacent key for keyboard navigation
@@ -813,6 +818,41 @@ class AllAroundKeyboard extends HTMLElement {
         el.addEventListener('mousedown', (e) => {
           e.preventDefault();
           const evt = new CustomEvent(KEYCLICK, { ...eventOpts, detail: { index: d.index, note: d.note } });
+          this.dispatchEvent(evt);
+        });
+
+        // Pointer events with full detail (for drag-drop detection)
+        el.addEventListener('pointerdown', (e) => {
+          const params = this._currentParams.get(d.index);
+          const evt = new CustomEvent(KEYPOINTERDOWN, {
+            ...eventOpts,
+            detail: {
+              index: d.index,
+              note: d.note,
+              frequency: d.frequency,
+              raised: d.raised,
+              clientX: e.clientX,
+              clientY: e.clientY,
+              pointerId: e.pointerId
+            }
+          });
+          this.dispatchEvent(evt);
+        });
+
+        el.addEventListener('pointerup', (e) => {
+          const params = this._currentParams.get(d.index);
+          const evt = new CustomEvent(KEYPOINTERUP, {
+            ...eventOpts,
+            detail: {
+              index: d.index,
+              note: d.note,
+              frequency: d.frequency,
+              raised: d.raised,
+              clientX: e.clientX,
+              clientY: e.clientY,
+              pointerId: e.pointerId
+            }
+          });
           this.dispatchEvent(evt);
         });
 
