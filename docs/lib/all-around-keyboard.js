@@ -699,13 +699,10 @@ var AllAroundKeyboard = (function (exports) {
   const SVGStrokePadding = 15;
   const SVGNS = 'http://www.w3.org/2000/svg';
 
-  // Event names
-  const KEYPRESS = 'keypress';
-  const KEYRELEASE = 'keyrelease';
-  const KEYLIGHT = 'keylight';
-  const KEYDIM = 'keydim';
-  const NOTELIGHT = 'notelight';
-  const NOTEDIM = 'notedim';
+  // Event names (output only - user interactions)
+  const KEYCLICK = 'keyclick';
+  const KEYHOVER = 'keyhover';
+  const KEYUNHOVER = 'keyunhover';
 
   // Helper to create SVG elements
   function svgEl(tag, attrs = {}) {
@@ -750,11 +747,24 @@ var AllAroundKeyboard = (function (exports) {
     requestAnimationFrame(tick);
   }
 
+  // Parse JSON array attribute, return empty array on failure
+  function parseArrayAttr(val) {
+    if (!val) return [];
+    try {
+      const arr = JSON.parse(val);
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
+
   class AllAroundKeyboard extends HTMLElement {
     static observedAttributes = [
       'notes-in-octave', 'raised-notes', 'octaves', 'sweep', 'depth',
       'width', 'overlapping', 'pie', 'synth', 'transition-time',
-      'base-tone', 'base-key', 'leftmost-key', 'key-style'
+      'base-tone', 'base-key', 'leftmost-key', 'key-style',
+      // State attributes (input)
+      'pressed-keys', 'lit-keys', 'pressed-notes', 'lit-notes'
     ];
 
     constructor() {
@@ -777,12 +787,16 @@ var AllAroundKeyboard = (function (exports) {
       this._leftmostKey = 3 * 12;
       this._keyStyle = '';
 
-      // State
+      // State (driven by attributes)
       this._pressedKeys = new Set();
       this._litKeys = new Set();
+      this._pressedNotes = new Set();
       this._litNotes = new Set();
-      this._keyElements = new Map(); // index -> {el, params}
+
+      // Internal
+      this._keyElements = new Map(); // index -> {el, data}
       this._currentParams = new Map(); // index -> arc params for animation
+      this._hoveredKey = null; // track hover for click detection
     }
 
     // Property getters/setters with attribute sync
@@ -831,6 +845,31 @@ var AllAroundKeyboard = (function (exports) {
     get keyStyle() { return this._keyStyle; }
     set keyStyle(v) { this._keyStyle = v; this._updateStyle(); }
 
+    // State attribute getters/setters
+    get pressedKeys() { return [...this._pressedKeys]; }
+    set pressedKeys(v) {
+      this._pressedKeys = new Set(Array.isArray(v) ? v : parseArrayAttr(v));
+      this._applyKeyStates();
+    }
+
+    get litKeys() { return [...this._litKeys]; }
+    set litKeys(v) {
+      this._litKeys = new Set(Array.isArray(v) ? v : parseArrayAttr(v));
+      this._applyKeyStates();
+    }
+
+    get pressedNotes() { return [...this._pressedNotes]; }
+    set pressedNotes(v) {
+      this._pressedNotes = new Set(Array.isArray(v) ? v : parseArrayAttr(v));
+      this._applyKeyStates();
+    }
+
+    get litNotes() { return [...this._litNotes]; }
+    set litNotes(v) {
+      this._litNotes = new Set(Array.isArray(v) ? v : parseArrayAttr(v));
+      this._applyKeyStates();
+    }
+
     attributeChangedCallback(name, oldVal, newVal) {
       if (oldVal === newVal) return;
       const propName = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -842,7 +881,6 @@ var AllAroundKeyboard = (function (exports) {
     connectedCallback() {
       setupLilSynth();
       this._setupDOM();
-      this._setupEventListeners();
       this._setupKeyboard();
     }
 
@@ -885,64 +923,25 @@ var AllAroundKeyboard = (function (exports) {
       });
     }
 
-    _setupEventListeners() {
-      const getKey = (index) => this._keyElements.get(index);
+    // Apply pressed/lit states to all keys based on current attribute values
+    _applyKeyStates() {
+      for (const [index, keyData] of this._keyElements) {
+        const note = keyData.data.note;
+        const isPressed = this._pressedKeys.has(index) || this._pressedNotes.has(note);
+        const isLit = this._litKeys.has(index) || this._litNotes.has(note);
 
-      this.addEventListener(KEYPRESS, (e) => {
-        const keyData = getKey(e.index);
-        if (keyData) {
-          keyData.el.classList.add('key--pressed');
-          keyData.el.dispatchEvent(new Event(KEYPRESS));
-        }
-        this._pressedKeys.add(e.index);
-      });
+        keyData.el.classList.toggle('key--pressed', isPressed);
+        keyData.el.classList.toggle('key--highlight', isLit);
 
-      this.addEventListener(KEYRELEASE, (e) => {
-        const keyData = getKey(e.index);
-        if (keyData) {
-          keyData.el.classList.remove('key--pressed');
-          keyData.el.dispatchEvent(new Event(KEYRELEASE));
-        }
-        this._pressedKeys.delete(e.index);
-      });
-
-      this.addEventListener(KEYLIGHT, (e) => {
-        const keyData = getKey(e.index);
-        if (keyData) {
-          keyData.el.classList.add('key--highlight');
-          keyData.el.dispatchEvent(new Event(KEYLIGHT));
-        }
-        this._litKeys.add(e.index);
-      });
-
-      this.addEventListener(KEYDIM, (e) => {
-        const keyData = getKey(e.index);
-        if (keyData) {
-          keyData.el.classList.remove('key--highlight');
-          keyData.el.dispatchEvent(new Event(KEYDIM));
-        }
-        this._litKeys.delete(e.index);
-      });
-
-      this.addEventListener(NOTELIGHT, (e) => {
-        for (const [, keyData] of this._keyElements) {
-          if (keyData.data.note === e.note) {
-            keyData.el.classList.add('key--highlight');
-            keyData.el.dispatchEvent(new Event(NOTELIGHT));
+        // Synth integration
+        if (this._synth) {
+          if (isPressed) {
+            soundKey(keyData.el, keyData.data.frequency);
+          } else {
+            dampKey(keyData.el);
           }
         }
-        this._litNotes.add(e.note);
-      });
-
-      this.addEventListener(NOTEDIM, (e) => {
-        for (const [, keyData] of this._keyElements) {
-          if (keyData.data.note === e.note) {
-            keyData.el.classList.remove('key--highlight');
-            keyData.el.dispatchEvent(new Event(NOTEDIM));
-          }
-        }
-        this._litNotes.delete(e.note);
-      });
+      }
     }
 
     _setupKeyboard() {
@@ -963,6 +962,7 @@ var AllAroundKeyboard = (function (exports) {
 
       this._svg.setAttribute('viewBox', `0 0 ${this._width} ${height}`);
       this._g.setAttribute('transform', `translate(${this._width / 2}, ${outerRadius + SVGStrokePadding / 2})`);
+
       const drawArc = arc()
         .cornerRadius(2)
         .innerRadius(d => d.raised ? innerRadius + this._depth / (Math.tan(this._overlapping * Math.PI / 2) + 2) : innerRadius)
@@ -1035,11 +1035,6 @@ var AllAroundKeyboard = (function (exports) {
 
           this._currentParams.set(d.index, newParams);
           existing.data = d;
-
-          // Re-apply state classes
-          existing.el.classList.toggle('key--pressed', this._pressedKeys.has(d.index));
-          existing.el.classList.toggle('key--highlight',
-            this._litKeys.has(d.index) || this._litNotes.has(d.note));
         } else {
           // Create new key
           const el = svgEl('path', {
@@ -1047,45 +1042,52 @@ var AllAroundKeyboard = (function (exports) {
             d: drawArc(newParams)
           });
 
-          // Event handlers
-          const onPress = (e) => {
+          // Event handlers - emit events, don't manage state
+          el.addEventListener('mouseenter', (e) => {
             e.preventDefault();
-            const evt = new Event(KEYPRESS);
-            evt.index = d.index;
+            this._hoveredKey = d.index;
+            const evt = new CustomEvent(KEYHOVER, { detail: { index: d.index, note: d.note } });
             this.dispatchEvent(evt);
-          };
-
-          const onRelease = (e) => {
-            e.preventDefault();
-            const evt = new Event(KEYRELEASE);
-            evt.index = d.index;
-            this.dispatchEvent(evt);
-          };
-
-          el.addEventListener('touchstart', onPress, { passive: false });
-          el.addEventListener('mouseover', onPress);
-          el.addEventListener('touchend', onRelease);
-          el.addEventListener('mouseout', onRelease);
-          el.addEventListener('mouseup', onRelease);
-
-          el.addEventListener(KEYPRESS, () => {
-            if (this._synth) soundKey(el, d.frequency);
-          });
-          el.addEventListener(KEYRELEASE, () => {
-            if (this._synth) dampKey(el);
           });
 
-          // Apply initial state
-          if (this._pressedKeys.has(d.index)) el.classList.add('key--pressed');
-          if (this._litKeys.has(d.index) || this._litNotes.has(d.note)) {
-            el.classList.add('key--highlight');
-          }
+          el.addEventListener('mouseleave', (e) => {
+            e.preventDefault();
+            this._hoveredKey = null;
+            const evt = new CustomEvent(KEYUNHOVER, { detail: { index: d.index, note: d.note } });
+            this.dispatchEvent(evt);
+          });
+
+          el.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            // Only emit click if we're still hovering this key
+            if (this._hoveredKey === d.index) {
+              const evt = new CustomEvent(KEYCLICK, { detail: { index: d.index, note: d.note } });
+              this.dispatchEvent(evt);
+            }
+          });
+
+          el.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const evt = new CustomEvent(KEYHOVER, { detail: { index: d.index, note: d.note } });
+            this.dispatchEvent(evt);
+          }, { passive: false });
+
+          el.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const evt = new CustomEvent(KEYCLICK, { detail: { index: d.index, note: d.note } });
+            this.dispatchEvent(evt);
+            const unhoverEvt = new CustomEvent(KEYUNHOVER, { detail: { index: d.index, note: d.note } });
+            this.dispatchEvent(unhoverEvt);
+          });
 
           this._g.appendChild(el);
           this._keyElements.set(d.index, { el, data: d });
           this._currentParams.set(d.index, newParams);
         }
       }
+
+      // Apply initial states
+      this._applyKeyStates();
 
       // Raise upper keys to top of render order
       for (const d of keyData) {
@@ -1095,81 +1097,14 @@ var AllAroundKeyboard = (function (exports) {
         }
       }
     }
-
-    // Public API
-    keysPress(keys) {
-      const arr = typeof keys === 'number' ? [keys] : [...keys];
-      for (const k of arr) {
-        const e = new Event(KEYPRESS);
-        e.index = k;
-        this.dispatchEvent(e);
-      }
-    }
-
-    keysRelease(keys) {
-      const arr = typeof keys === 'number' ? [keys] : [...keys];
-      for (const k of arr) {
-        const e = new Event(KEYRELEASE);
-        e.index = k;
-        this.dispatchEvent(e);
-      }
-    }
-
-    keysLight(keys) {
-      const arr = typeof keys === 'number' ? [keys] : [...keys];
-      for (const k of arr) {
-        const e = new Event(KEYLIGHT);
-        e.index = k;
-        this.dispatchEvent(e);
-      }
-    }
-
-    keysDim(keys) {
-      const arr = typeof keys === 'number' ? [keys] : [...keys];
-      for (const k of arr) {
-        const e = new Event(KEYDIM);
-        e.index = k;
-        this.dispatchEvent(e);
-      }
-    }
-
-    notesLight(notes) {
-      const arr = typeof notes === 'number' ? [notes] : [...notes];
-      for (const n of arr) {
-        const e = new Event(NOTELIGHT);
-        e.note = n;
-        this.dispatchEvent(e);
-      }
-    }
-
-    notesDim(notes) {
-      const arr = typeof notes === 'number' ? [notes] : [...notes];
-      for (const n of arr) {
-        const e = new Event(NOTEDIM);
-        e.note = n;
-        this.dispatchEvent(e);
-      }
-    }
-
-    releaseAll() {
-      this.keysRelease(this._pressedKeys);
-    }
-
-    dimAll() {
-      this.keysDim(this._litKeys);
-      this.notesDim(this._litNotes);
-    }
   }
 
   customElements.define('all-around-keyboard', AllAroundKeyboard);
 
   exports.AllAroundKeyboard = AllAroundKeyboard;
-  exports.KEYDIM = KEYDIM;
-  exports.KEYLIGHT = KEYLIGHT;
-  exports.KEYPRESS = KEYPRESS;
-  exports.KEYRELEASE = KEYRELEASE;
-  exports.NOTEDIM = NOTEDIM;
-  exports.NOTELIGHT = NOTELIGHT;
+  exports.KEYCLICK = KEYCLICK;
+  exports.KEYHOVER = KEYHOVER;
+  exports.KEYUNHOVER = KEYUNHOVER;
   exports.keyLayout = keyLayout;
 
   return exports;
