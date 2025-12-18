@@ -1350,6 +1350,72 @@ var AllAroundKeyboard = (function (exports) {
       }
     }
 
+    /**
+     * Get the note at a given screen coordinate.
+     * Returns { index, note, raised } or null if no key at that point.
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     * @returns {Object|null} Key info or null
+     */
+    getNoteAtPoint(screenX, screenY) {
+      if (!this._g || !this._geometry) return null;
+
+      // Get the inverse CTM to transform screen coords to SVG coords
+      const ctm = this._g.getScreenCTM();
+      if (!ctm) return null;
+
+      // Invert the transformation
+      const inv = ctm.inverse();
+      const gX = inv.a * screenX + inv.c * screenY + inv.e;
+      const gY = inv.b * screenX + inv.d * screenY + inv.f;
+
+      // Calculate angle and radius in keyboard space
+      // Angle is measured from 12 o'clock position, clockwise
+      const angle = Math.atan2(gX, -gY);
+      const radius = Math.sqrt(gX * gX + gY * gY);
+
+      // Check if within keyboard bounds
+      if (radius < this._geometry.innerRadius || radius > this._geometry.outerRadius) {
+        return null;
+      }
+
+      // Find which key contains this angle
+      for (const [index, keyData] of this._keyElements) {
+        const params = this._currentParams.get(index);
+        if (!params) continue;
+
+        // Check angle (handle wrap-around)
+        let keyStart = params.startAngle;
+        let keyEnd = params.endAngle;
+
+        // Normalize angles to same range as our calculated angle
+        const normalizedAngle = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        const normalizedStart = ((keyStart % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        const normalizedEnd = ((keyEnd % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+        let inAngleRange;
+        if (normalizedStart <= normalizedEnd) {
+          inAngleRange = normalizedAngle >= normalizedStart && normalizedAngle <= normalizedEnd;
+        } else {
+          // Wraps around 0
+          inAngleRange = normalizedAngle >= normalizedStart || normalizedAngle <= normalizedEnd;
+        }
+
+        // Check radius
+        const inRadiusRange = radius >= params.innerRadius && radius <= params.outerRadius;
+
+        if (inAngleRange && inRadiusRange) {
+          return {
+            index: index,
+            note: keyData.data.note,
+            raised: keyData.data.raised
+          };
+        }
+      }
+
+      return null;
+    }
+
     // Apply pressed/lit/hover states to all keys based on current attribute values
     _applyKeyStates() {
       for (const [index, keyData] of this._keyElements) {
