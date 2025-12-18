@@ -1126,7 +1126,7 @@ class AllAroundKeyboard extends HTMLElement {
       childList: true,
       subtree: false,
       attributes: true,
-      attributeFilter: ['data-pitch', 'data-key', 'data-radius']
+      attributeFilter: ['data-pitch', 'data-key', 'data-radius', 'data-wave-number', 'data-wave-amplitude', 'data-wave-phase']
     });
 
     // Also observe attribute changes on children (MutationObserver on parent doesn't catch child attr changes)
@@ -1150,7 +1150,7 @@ class AllAroundKeyboard extends HTMLElement {
         // Observe this child for attribute changes
         this._indicatorObserver.observe(child, {
           attributes: true,
-          attributeFilter: ['data-pitch', 'data-key', 'data-radius']
+          attributeFilter: ['data-pitch', 'data-key', 'data-radius', 'data-wave-number', 'data-wave-amplitude', 'data-wave-phase']
         });
       }
     }
@@ -1179,43 +1179,115 @@ class AllAroundKeyboard extends HTMLElement {
 
     if (!hasPitch && !hasKey) return;
 
+    let angle;
     let pitch;
     let keyRadius = null;
+    let isVisible = true;
+
+    const totalKeys = this._octaves * this._notesInOctave;
+    const sweepAngle = this._geometry.endAngle - this._geometry.startAngle;
+    const keyWidth = sweepAngle / totalKeys;
 
     if (hasKey) {
+      // For data-key: use the key's actual geometry directly
       const keyIndex = parseInt(el.dataset.key, 10);
       const keyEntry = this._keyElements.get(keyIndex);
       if (keyEntry) {
         const params = this._currentParams.get(keyIndex);
         if (params) {
-          const midAngle = (params.startAngle + params.endAngle) / 2;
-          pitch = ((midAngle - this._geometry.startAngle) /
-                   (this._geometry.endAngle - this._geometry.startAngle)) *
-                  (this._octaves * this._notesInOctave);
+          // Use the key's actual midAngle directly - no conversion needed
+          angle = (params.startAngle + params.endAngle) / 2;
+          pitch = keyIndex - this._leftmostKey;
 
           const keyMidRadius = (params.innerRadius + params.outerRadius) / 2;
           keyRadius = (keyMidRadius - this._geometry.innerRadius) /
                       (this._geometry.outerRadius - this._geometry.innerRadius);
         } else {
+          // Fallback: calculate angle from key index
           pitch = keyIndex - this._leftmostKey;
+          angle = this._geometry.startAngle + (pitch + 0.5) * keyWidth;
         }
       } else {
+        // Key not found: calculate angle from key index
         pitch = keyIndex - this._leftmostKey;
+        angle = this._geometry.startAngle + (pitch + 0.5) * keyWidth;
       }
     } else {
+      // For data-pitch: continuous positioning using actual key positions
       pitch = parseFloat(el.dataset.pitch) || 0;
+
+      // Check if keyboard is circular (sweep close to 360°)
+      const isCircular = Math.abs(this._sweep - 2 * Math.PI) < 0.01;
+
+      if (!isCircular && (pitch < -0.5 || pitch > totalKeys - 0.5)) {
+        isVisible = false;
+      }
+
+      // Get the two adjacent keys to interpolate between
+      const lowerPitch = Math.floor(pitch);
+      const upperPitch = Math.ceil(pitch);
+      const fraction = pitch - lowerPitch;
+
+      // Get key indices (with wrapping for circular)
+      const lowerKeyIndex = this._leftmostKey + (isCircular ? ((lowerPitch % totalKeys) + totalKeys) % totalKeys : Math.max(0, Math.min(totalKeys - 1, lowerPitch)));
+      const upperKeyIndex = this._leftmostKey + (isCircular ? ((upperPitch % totalKeys) + totalKeys) % totalKeys : Math.max(0, Math.min(totalKeys - 1, upperPitch)));
+
+      const lowerParams = this._currentParams.get(lowerKeyIndex);
+      const upperParams = this._currentParams.get(upperKeyIndex);
+
+      if (lowerParams && upperParams) {
+        const lowerAngle = (lowerParams.startAngle + lowerParams.endAngle) / 2;
+        let upperAngle = (upperParams.startAngle + upperParams.endAngle) / 2;
+
+        // Handle wrap-around for circular keyboards
+        if (isCircular && upperPitch >= totalKeys) {
+          upperAngle += 2 * Math.PI;
+        }
+
+        // Interpolate between the two key centers
+        angle = lowerAngle + fraction * (upperAngle - lowerAngle);
+      } else if (lowerParams) {
+        angle = (lowerParams.startAngle + lowerParams.endAngle) / 2;
+      } else {
+        // Fallback if keys not ready yet
+        angle = this._geometry.startAngle + (pitch + 0.5) * keyWidth;
+      }
     }
 
-    const hasExplicitRadius = el.hasAttribute('data-radius');
-    const radius = hasExplicitRadius
+    // Calculate radius - can be static or modulated by a standing wave
+    let radius;
+    const baseRadius = el.hasAttribute('data-radius')
       ? parseFloat(el.dataset.radius)
       : (keyRadius ?? 0.5);
 
-    // Calculate angle from pitch (0 = start, N = end of sweep)
-    const totalKeys = this._octaves * this._notesInOctave;
-    const normalizedPitch = pitch / totalKeys;
-    const angle = this._geometry.startAngle +
-                  normalizedPitch * (this._geometry.endAngle - this._geometry.startAngle);
+    if (el.hasAttribute('data-wave-number')) {
+      // Standing wave: radius oscillates based on pitch position
+      const waveNumber = parseFloat(el.dataset.waveNumber) || 1;
+      const waveAmplitude = parseFloat(el.dataset.waveAmplitude) || 0.2;
+      const wavePhase = parseFloat(el.dataset.wavePhase) || 0;
+
+      // Calculate wave: k wavelengths across totalKeys
+      const wavePosition = (2 * Math.PI * waveNumber * pitch / totalKeys) + wavePhase;
+      const waveOffset = waveAmplitude * Math.sin(wavePosition);
+
+      radius = baseRadius + waveOffset;
+
+      // Set wave CSS custom properties for external use
+      el.style.setProperty('--indicator-wave-offset', waveOffset);
+      el.style.setProperty('--indicator-wave-phase', wavePosition);
+    } else {
+      radius = baseRadius;
+    }
+
+    // Set visibility
+    el.style.setProperty('--indicator-visible', isVisible ? '1' : '0');
+    if (!isVisible) {
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+    } else {
+      el.style.opacity = '';
+      el.style.pointerEvents = '';
+    }
 
     // Calculate radial position
     const r = this._geometry.innerRadius +
