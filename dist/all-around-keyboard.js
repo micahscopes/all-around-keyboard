@@ -1205,9 +1205,21 @@ var AllAroundKeyboard = (function (exports) {
             angle = (params.startAngle + params.endAngle) / 2;
             pitch = keyIndex - this._leftmostKey;
 
-            const keyMidRadius = (params.innerRadius + params.outerRadius) / 2;
-            keyRadius = (keyMidRadius - this._geometry.innerRadius) /
-                        (this._geometry.outerRadius - this._geometry.innerRadius);
+            // Position white (lower) keys closer to inner edge, black (upper) keys at center
+            // This avoids awkward overlapping when keys have offset geometry
+            const keyInnerNorm = (params.innerRadius - this._geometry.innerRadius) /
+                                 (this._geometry.outerRadius - this._geometry.innerRadius);
+            const keyOuterNorm = (params.outerRadius - this._geometry.innerRadius) /
+                                 (this._geometry.outerRadius - this._geometry.innerRadius);
+            const keyDepth = keyOuterNorm - keyInnerNorm;
+
+            if (params.raised) {
+              // Black keys: center of key
+              keyRadius = keyInnerNorm + keyDepth * 0.5;
+            } else {
+              // White keys: 30% from inner edge of key
+              keyRadius = keyInnerNorm + keyDepth * 0.3;
+            }
           } else {
             // Fallback: calculate angle from key index
             pitch = keyIndex - this._leftmostKey;
