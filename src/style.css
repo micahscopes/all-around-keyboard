@@ -4,6 +4,7 @@ all-around-keyboard {
 }
 :host {
   display: block;
+  position: relative; /* Containing block for slotted absolute children */
   padding: 5px;
 
   /* CSS Custom Properties - override these to customize */
@@ -20,6 +21,30 @@ all-around-keyboard {
   --key-stroke-width: 1.5px;
   --key-focus-outline: 2px solid #005bff;
   --key-focus-outline-offset: 2px;
+}
+
+/* Container layout for indicator positioning */
+.keyboard-container {
+  position: relative;
+}
+
+.indicator-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Allow clicks through to keyboard */
+  overflow: visible;
+}
+
+/* Slotted indicator children */
+::slotted([data-pitch]),
+::slotted([data-key]) {
+  position: absolute;
+  left: var(--indicator-x, 0);
+  top: var(--indicator-y, 0);
+  transform: translate(-50%, -50%);
 }
 
 .key {
@@ -78,3 +103,19 @@ all-around-keyboard {
 
 .key--highlight.key--lower { fill: var(--key-highlight-lower-fill); }
 .key--highlight.key--upper { fill: var(--key-highlight-upper-fill); }
+
+/* Key labels */
+.key-label {
+  font-family: var(--key-label-font, system-ui, -apple-system, sans-serif);
+  font-size: var(--key-label-font-size, 12px);
+  font-weight: var(--key-label-font-weight, 500);
+  user-select: none;
+}
+
+.key-label--lower {
+  fill: var(--key-label-lower-fill, #333);
+}
+
+.key-label--upper {
+  fill: var(--key-label-upper-fill, #fff);
+}

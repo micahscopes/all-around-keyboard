@@ -25,8 +25,20 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-// Animate arc parameters over time
-function animateArc(el, fromParams, toParams, drawArc, duration, onDone) {
+// Calculate centroid position of an arc segment
+function arcCentroid(params) {
+  const { startAngle, endAngle, innerRadius, outerRadius } = params;
+  const midAngle = (startAngle + endAngle) / 2;
+  const midRadius = (innerRadius + outerRadius) / 2;
+  // SVG uses clockwise angles from 12 o'clock, so we need to adjust
+  return {
+    x: Math.sin(midAngle) * midRadius,
+    y: -Math.cos(midAngle) * midRadius
+  };
+}
+
+// Animate arc parameters over time (with optional text element)
+function animateArc(el, textEl, fromParams, toParams, drawArc, duration, onDone) {
   const start = performance.now();
 
   function tick(now) {
@@ -43,6 +55,13 @@ function animateArc(el, fromParams, toParams, drawArc, duration, onDone) {
     };
 
     el.setAttribute('d', drawArc(current));
+
+    // Update text position if text element exists
+    if (textEl) {
+      const centroid = arcCentroid(current);
+      textEl.setAttribute('x', centroid.x);
+      textEl.setAttribute('y', centroid.y);
+    }
 
     if (t < 1) {
       requestAnimationFrame(tick);
@@ -72,7 +91,9 @@ class AllAroundKeyboard extends HTMLElement {
     'base-tone', 'base-key', 'leftmost-key',
     // State attributes (input)
     'pressed-keys', 'lit-keys', 'pressed-notes', 'lit-notes',
-    'hovered-keys', 'hovered-notes'
+    'hovered-keys', 'hovered-notes',
+    // Label attributes
+    'key-labels', 'label-format'
   ];
 
   constructor() {
@@ -102,10 +123,29 @@ class AllAroundKeyboard extends HTMLElement {
     this._hoveredKeys = new Set();
     this._hoveredNotes = new Set();
 
+    // Label settings
+    this._keyLabels = false;
+    this._labelFormat = 'note'; // 'note', 'pitch', 'index', or custom function
+    this._keyLabelsMap = null; // Map of index -> label string (for custom labels)
+
     // Internal
-    this._keyElements = new Map(); // index -> {el, data}
+    this._keyElements = new Map(); // index -> {el, textEl, data}
     this._currentParams = new Map(); // index -> arc params for animation
     this._focusedKeyIndex = null; // for keyboard navigation
+
+    // Geometry cache (for indicator positioning)
+    this._geometry = {
+      cx: 0,           // center x in viewBox coords
+      cy: 0,           // center y in viewBox coords
+      innerRadius: 0,
+      outerRadius: 0,
+      startAngle: 0,
+      endAngle: 0
+    };
+
+    // Indicator observation
+    this._indicatorObserver = null;
+    this._resizeObserver = null;
   }
 
   // Property getters/setters with attribute sync
@@ -188,6 +228,70 @@ class AllAroundKeyboard extends HTMLElement {
     this._applyKeyStates();
   }
 
+  get keyLabels() { return this._keyLabels; }
+  set keyLabels(v) {
+    // Can be boolean, 'true'/'false', or a Map/Object of index -> label
+    if (v instanceof Map) {
+      this._keyLabels = true;
+      this._keyLabelsMap = v;
+    } else if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+      this._keyLabels = true;
+      this._keyLabelsMap = new Map(Object.entries(v).map(([k, val]) => [Number(k), val]));
+    } else {
+      this._keyLabels = v === true || v === 'true';
+      this._keyLabelsMap = null;
+    }
+    this._updateLabels();
+  }
+
+  get labelFormat() { return this._labelFormat; }
+  set labelFormat(v) {
+    this._labelFormat = v;
+    this._updateLabels();
+  }
+
+  // Read-only geometry property for external positioning
+  get geometry() {
+    return { ...this._geometry };
+  }
+
+  // Helper method to get position for a pitch value
+  getPositionForPitch(pitch, radius = 0.5) {
+    const totalKeys = this._octaves * this._notesInOctave;
+    const normalizedPitch = pitch / totalKeys;
+    const angle = this._geometry.startAngle +
+                  normalizedPitch * (this._geometry.endAngle - this._geometry.startAngle);
+    const r = this._geometry.innerRadius +
+              radius * (this._geometry.outerRadius - this._geometry.innerRadius);
+
+    const x = this._geometry.cx + Math.sin(angle) * r;
+    const y = this._geometry.cy - Math.cos(angle) * r;
+
+    return {
+      x, y,
+      angle: angle * 180 / Math.PI,
+      pitch,
+      radius
+    };
+  }
+
+  // Helper method to get position for a key index
+  getPositionForKey(keyIndex, radius = 0.5) {
+    const keyEntry = this._keyElements.get(keyIndex);
+    if (keyEntry) {
+      const params = this._currentParams.get(keyIndex);
+      if (params) {
+        const midAngle = (params.startAngle + params.endAngle) / 2;
+        const pitch = ((midAngle - this._geometry.startAngle) /
+                       (this._geometry.endAngle - this._geometry.startAngle)) *
+                      (this._octaves * this._notesInOctave);
+        return this.getPositionForPitch(pitch, radius);
+      }
+    }
+    // Fallback to simple calculation
+    return this.getPositionForPitch(keyIndex - this._leftmostKey, radius);
+  }
+
   attributeChangedCallback(name, oldVal, newVal) {
     if (oldVal === newVal) return;
     const propName = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -200,10 +304,18 @@ class AllAroundKeyboard extends HTMLElement {
     setupLilSynth(this);
     this._setupDOM();
     this._setupKeyboard();
+    this._setupIndicatorObservers();
   }
 
   disconnectedCallback() {
-    // Cleanup if needed
+    if (this._indicatorObserver) {
+      this._indicatorObserver.disconnect();
+      this._indicatorObserver = null;
+    }
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
   }
 
   _setupDOM() {
@@ -211,6 +323,7 @@ class AllAroundKeyboard extends HTMLElement {
     style.textContent = css;
 
     const container = document.createElement('div');
+    container.classList.add('keyboard-container');
     container.setAttribute('role', 'application');
     container.setAttribute('aria-label', 'Musical keyboard');
 
@@ -222,11 +335,20 @@ class AllAroundKeyboard extends HTMLElement {
     svg.appendChild(g);
     container.appendChild(svg);
 
+    // Indicator slot container - positioned over the keyboard
+    const indicatorContainer = document.createElement('div');
+    indicatorContainer.classList.add('indicator-container');
+    const slot = document.createElement('slot');
+    indicatorContainer.appendChild(slot);
+    container.appendChild(indicatorContainer);
+
     this.shadowRoot.appendChild(style);
     this.shadowRoot.appendChild(container);
 
     this._svg = svg;
     this._g = g;
+    this._container = container;
+    this._indicatorContainer = indicatorContainer;
   }
 
   _scheduleUpdate() {
@@ -246,6 +368,198 @@ class AllAroundKeyboard extends HTMLElement {
     const octave = Math.floor(noteNum / this._notesInOctave);
     const note = noteNum % this._notesInOctave;
     return `${noteNames[note] || `Note ${note}`}${octave}`;
+  }
+
+  // Get label text for a key
+  _getLabelText(data) {
+    // Custom labels map takes precedence
+    if (this._keyLabelsMap && this._keyLabelsMap.has(data.index)) {
+      return this._keyLabelsMap.get(data.index);
+    }
+
+    // Format-based labels
+    if (typeof this._labelFormat === 'function') {
+      return this._labelFormat(data);
+    }
+
+    switch (this._labelFormat) {
+      case 'note':
+        return this._getNoteName(data.note);
+      case 'pitch':
+        // Just the pitch class (C, D, E, etc.) without octave
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        return noteNames[data.note % this._notesInOctave] || `${data.note % this._notesInOctave}`;
+      case 'index':
+        return String(data.index);
+      default:
+        return this._getNoteName(data.note);
+    }
+  }
+
+  // Update all key labels (text content and visibility)
+  _updateLabels() {
+    if (!this._keyElements) return;
+
+    for (const [index, keyData] of this._keyElements) {
+      if (keyData.textEl) {
+        if (this._keyLabels) {
+          keyData.textEl.textContent = this._getLabelText(keyData.data);
+          keyData.textEl.style.display = '';
+        } else {
+          keyData.textEl.style.display = 'none';
+        }
+      }
+    }
+  }
+
+  // Set up observers for indicator children
+  _setupIndicatorObservers() {
+    // Watch for changes to indicator children (data attributes, added/removed)
+    this._indicatorObserver = new MutationObserver((mutations) => {
+      let needsUpdate = false;
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          needsUpdate = true;
+        } else if (mutation.type === 'attributes') {
+          const attr = mutation.attributeName;
+          if (attr === 'data-pitch' || attr === 'data-key' || attr === 'data-radius') {
+            this._updateIndicator(mutation.target);
+          }
+        }
+      }
+      if (needsUpdate) {
+        this._updateIndicators();
+      }
+    });
+
+    this._indicatorObserver.observe(this, {
+      childList: true,
+      subtree: false,
+      attributes: true,
+      attributeFilter: ['data-pitch', 'data-key', 'data-radius']
+    });
+
+    // Also observe attribute changes on children (MutationObserver on parent doesn't catch child attr changes)
+    // We'll re-observe children when they're added
+    this._observeIndicatorChildren();
+
+    // Watch for resize to update indicator positions
+    this._resizeObserver = new ResizeObserver(() => {
+      this._updateIndicators();
+    });
+    this._resizeObserver.observe(this);
+
+    // Initial update
+    this._updateIndicators();
+  }
+
+  // Observe attribute changes on indicator children
+  _observeIndicatorChildren() {
+    for (const child of this.children) {
+      if (child.hasAttribute('data-pitch') || child.hasAttribute('data-key')) {
+        // Observe this child for attribute changes
+        this._indicatorObserver.observe(child, {
+          attributes: true,
+          attributeFilter: ['data-pitch', 'data-key', 'data-radius']
+        });
+      }
+    }
+  }
+
+  // Update all indicator children positions
+  _updateIndicators() {
+    // Double-rAF to ensure layout is fully complete before reading CTM
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        for (const child of this.children) {
+          if (child.hasAttribute('data-pitch') || child.hasAttribute('data-key')) {
+            this._updateIndicator(child);
+          }
+        }
+        // Re-observe new children
+        this._observeIndicatorChildren();
+      });
+    });
+  }
+
+  // Update a single indicator child's CSS custom properties
+  _updateIndicator(el) {
+    const hasPitch = el.hasAttribute('data-pitch');
+    const hasKey = el.hasAttribute('data-key');
+
+    if (!hasPitch && !hasKey) return;
+
+    let pitch;
+    let keyRadius = null; // Will be set for data-key if we can determine it
+
+    if (hasKey) {
+      // data-key: snap to key center
+      const keyIndex = parseInt(el.dataset.key, 10);
+      const keyEntry = this._keyElements.get(keyIndex);
+      if (keyEntry) {
+        // Use the actual key center angle
+        const params = this._currentParams.get(keyIndex);
+        if (params) {
+          const midAngle = (params.startAngle + params.endAngle) / 2;
+          // Convert angle back to pitch position
+          pitch = ((midAngle - this._geometry.startAngle) /
+                   (this._geometry.endAngle - this._geometry.startAngle)) *
+                  (this._octaves * this._notesInOctave);
+
+          // Calculate the key's radial center (normalized 0-1)
+          const keyMidRadius = (params.innerRadius + params.outerRadius) / 2;
+          keyRadius = (keyMidRadius - this._geometry.innerRadius) /
+                      (this._geometry.outerRadius - this._geometry.innerRadius);
+        } else {
+          pitch = keyIndex - this._leftmostKey;
+        }
+      } else {
+        pitch = keyIndex - this._leftmostKey;
+      }
+    } else {
+      // data-pitch: continuous position
+      pitch = parseFloat(el.dataset.pitch) || 0;
+    }
+
+    // For data-key, use the key's actual radial center unless data-radius is explicitly set
+    const hasExplicitRadius = el.hasAttribute('data-radius');
+    const radius = hasExplicitRadius
+      ? parseFloat(el.dataset.radius)
+      : (keyRadius ?? 0.5);
+
+    // Calculate angle from pitch (0 = start, N = end of sweep)
+    const totalKeys = this._octaves * this._notesInOctave;
+    const normalizedPitch = pitch / totalKeys;
+    const angle = this._geometry.startAngle +
+                  normalizedPitch * (this._geometry.endAngle - this._geometry.startAngle);
+
+    // Calculate radial position
+    const r = this._geometry.innerRadius +
+              radius * (this._geometry.outerRadius - this._geometry.innerRadius);
+
+    // Calculate point in <g> coordinate space (origin is at keyboard center)
+    const gX = Math.sin(angle) * r;
+    const gY = -Math.cos(angle) * r;
+
+    // Use SVG's CTM to transform to screen coordinates
+    const ctm = this._g.getScreenCTM();
+    if (!ctm) return;
+
+    // Transform the point
+    const screenX = ctm.a * gX + ctm.c * gY + ctm.e;
+    const screenY = ctm.b * gX + ctm.d * gY + ctm.f;
+
+    // Make relative to host element (the containing block for slotted content)
+    const hostRect = this.getBoundingClientRect();
+    const pixelX = screenX - hostRect.left;
+    const pixelY = screenY - hostRect.top;
+
+    // Set CSS custom properties
+    el.style.setProperty('--indicator-x', `${pixelX}px`);
+    el.style.setProperty('--indicator-y', `${pixelY}px`);
+    el.style.setProperty('--indicator-angle', `${angle * 180 / Math.PI}deg`);
+    el.style.setProperty('--indicator-pitch', pitch);
+    el.style.setProperty('--indicator-radius', radius);
   }
 
   // Focus adjacent key for keyboard navigation
@@ -305,6 +619,16 @@ class AllAroundKeyboard extends HTMLElement {
     this._svg.setAttribute('viewBox', `0 0 ${this._width} ${height}`);
     this._g.setAttribute('transform', `translate(${this._width / 2}, ${outerRadius + SVGStrokePadding / 2})`);
 
+    // Cache geometry for indicator positioning
+    this._geometry = {
+      cx: this._width / 2,
+      cy: outerRadius + SVGStrokePadding / 2,
+      innerRadius,
+      outerRadius,
+      startAngle,
+      endAngle
+    };
+
     const drawArc = arc()
       .cornerRadius(2)
       .innerRadius(d => d.raised ? innerRadius + this._depth / (Math.tan(this._overlapping * Math.PI / 2) + 2) : innerRadius)
@@ -329,6 +653,7 @@ class AllAroundKeyboard extends HTMLElement {
     for (const [index, data] of this._keyElements) {
       if (!currentIndices.has(index)) {
         data.el.remove();
+        if (data.textEl) data.textEl.remove();
         this._keyElements.delete(index);
         this._currentParams.delete(index);
       }
@@ -357,17 +682,29 @@ class AllAroundKeyboard extends HTMLElement {
         const needsModulation = (d.raised !== wasRaised);
         existing.el.classList.toggle('key--modulating', needsModulation);
 
+        // Update text class for raised state
+        if (existing.textEl) {
+          existing.textEl.classList.toggle('key-label--upper', d.raised);
+          existing.textEl.classList.toggle('key-label--lower', !d.raised);
+        }
+
         if (this._transitionTime > 0 && (
           oldParams.startAngle !== newParams.startAngle ||
           oldParams.endAngle !== newParams.endAngle
         )) {
-          animateArc(existing.el, oldParams, newParams, drawArc, this._transitionTime, () => {
+          animateArc(existing.el, existing.textEl, oldParams, newParams, drawArc, this._transitionTime, () => {
             existing.el.classList.remove('key--modulating');
             existing.el.classList.toggle('key--lower', !d.raised);
             existing.el.classList.toggle('key--upper', d.raised);
           });
         } else {
           existing.el.setAttribute('d', drawArc(newParams));
+          // Update text position without animation
+          if (existing.textEl) {
+            const centroid = arcCentroid(newParams);
+            existing.textEl.setAttribute('x', centroid.x);
+            existing.textEl.setAttribute('y', centroid.y);
+          }
           setTimeout(() => {
             existing.el.classList.remove('key--modulating');
             existing.el.classList.toggle('key--lower', !d.raised);
@@ -453,8 +790,24 @@ class AllAroundKeyboard extends HTMLElement {
           this.dispatchEvent(evt);
         });
 
+        // Create text element for label
+        const centroid = arcCentroid(newParams);
+        const textEl = svgEl('text', {
+          class: `key-label ${d.raised ? 'key-label--upper' : 'key-label--lower'}`,
+          x: centroid.x,
+          y: centroid.y,
+          'text-anchor': 'middle',
+          'dominant-baseline': 'central',
+          'pointer-events': 'none'  // Allow clicks to pass through to the key
+        });
+        textEl.textContent = this._getLabelText(d);
+        if (!this._keyLabels) {
+          textEl.style.display = 'none';
+        }
+
         this._g.appendChild(el);
-        this._keyElements.set(d.index, { el, data: d });
+        this._g.appendChild(textEl);
+        this._keyElements.set(d.index, { el, textEl, data: d });
         this._currentParams.set(d.index, newParams);
       }
     }
@@ -465,10 +818,18 @@ class AllAroundKeyboard extends HTMLElement {
     // Raise upper keys to top of render order
     for (const d of keyData) {
       if (d.raised) {
-        const keyData = this._keyElements.get(d.index);
-        if (keyData) this._g.appendChild(keyData.el);
+        const keyEntry = this._keyElements.get(d.index);
+        if (keyEntry) this._g.appendChild(keyEntry.el);
       }
     }
+
+    // Raise all text labels above all keys
+    for (const [, keyEntry] of this._keyElements) {
+      if (keyEntry.textEl) this._g.appendChild(keyEntry.textEl);
+    }
+
+    // Update indicator positions after geometry changes
+    this._updateIndicators();
   }
 }
 

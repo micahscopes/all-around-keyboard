@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Indicator Children Demo</title>
+<body>
+
+<h1>Indicator Children Demo</h1>
+<p>Zodiac animals on each key + a wave emoji oscillating around</p>
+
+<all-around-keyboard id="kb" notes-in-octave="12"
+                     raised-notes="[1,3,6,8,10]"
+                     sweep="270" octaves="1" transition-time="500"
+                     depth="120" width="500">
+  <!-- Zodiac animals - one per key (auto-positioned at key's radial center) -->
+  <span data-key="36" class="zodiac">🐀</span>
+  <span data-key="37" class="zodiac">🐂</span>
+  <span data-key="38" class="zodiac">🐅</span>
+  <span data-key="39" class="zodiac">🐇</span>
+  <span data-key="40" class="zodiac">🐉</span>
+  <span data-key="41" class="zodiac">🐍</span>
+  <span data-key="42" class="zodiac">🐴</span>
+  <span data-key="43" class="zodiac">🐐</span>
+  <span data-key="44" class="zodiac">🐒</span>
+  <span data-key="45" class="zodiac">🐓</span>
+  <span data-key="46" class="zodiac">🐕</span>
+  <span data-key="47" class="zodiac">🐖</span>
+
+  <!-- Wave emoji - uses data-pitch for continuous positioning -->
+  <span id="wave" data-pitch="0" data-radius="0.85" class="wave">🌊</span>
+</all-around-keyboard>
+
+<div class="controls">
+  <label>
+    Speed: <input type="range" id="speed" min="0.5" max="5" step="0.1" value="1">
+    <span id="speed-value">1x</span>
+  </label>
+  <label>
+    Radius: <input type="range" id="radius" min="0" max="1" step="0.05" value="0.85">
+    <span id="radius-value">0.85</span>
+  </label>
+</div>
+
+<script src="../lib/all-around-keyboard.js"></script>
+<script>
+  const kb = document.getElementById('kb');
+  const wave = document.getElementById('wave');
+  const speedInput = document.getElementById('speed');
+  const radiusInput = document.getElementById('radius');
+  const speedValue = document.getElementById('speed-value');
+  const radiusValue = document.getElementById('radius-value');
+
+  let speed = 1;
+  let waveRadius = 0.85;
+
+  speedInput.addEventListener('input', () => {
+    speed = parseFloat(speedInput.value);
+    speedValue.textContent = speed.toFixed(1) + 'x';
+  });
+
+  radiusInput.addEventListener('input', () => {
+    waveRadius = parseFloat(radiusInput.value);
+    radiusValue.textContent = waveRadius.toFixed(2);
+  });
+
+  // Animate the wave emoji in an oscillating pattern
+  let startTime = performance.now();
+
+  function animate(now) {
+    const elapsed = (now - startTime) / 1000; // seconds
+
+    // Oscillate using a sine wave (0 to 12 and back)
+    const pitch = 6 + Math.sin(elapsed * speed) * 6;
+
+    wave.dataset.pitch = pitch;
+    wave.dataset.radius = waveRadius;
+
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+</script>
+
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #eee;
+    text-align: center;
+    min-height: 100vh;
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-weight: 300;
+    color: #fff;
+  }
+
+  p {
+    margin: 0 0 30px;
+    opacity: 0.6;
+    font-size: 14px;
+  }
+
+  all-around-keyboard {
+    width: 90%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: block;
+
+    /* Dark theme */
+    --key-lower-fill: #2a2a4a;
+    --key-lower-stroke: #4a4a6a;
+    --key-upper-fill: #1a1a2a;
+    --key-upper-stroke: #3a3a5a;
+    --key-pressed-fill: #ff6b6b;
+    --key-highlight-stroke: #4ecdc4;
+  }
+
+  .zodiac {
+    font-size: 24px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    transition: transform 0.1s ease-out;
+    pointer-events: none;
+  }
+
+  .wave {
+    font-size: 32px;
+    filter: drop-shadow(0 0 10px rgba(78, 205, 196, 0.8));
+    pointer-events: none;
+  }
+
+  .controls {
+    margin-top: 30px;
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .controls label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #aaa;
+  }
+
+  .controls input[type="range"] {
+    width: 120px;
+    accent-color: #4ecdc4;
+  }
+
+  .controls span {
+    min-width: 40px;
+    text-align: left;
+    color: #4ecdc4;
+  }
+</style>
+</body>
+</html>
