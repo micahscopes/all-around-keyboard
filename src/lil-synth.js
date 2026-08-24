@@ -1,66 +1,103 @@
-const LILSYNTH = Symbol();
+// The demonstration synth is deliberately lazy and instance-owned. Merely
+// connecting a visual keyboard must never create an AudioContext.
+const synths = new WeakMap();
 
-function setupLilSynth() {
-  var AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-  if (!AudioContext) return console.error("AudioContext not supported");
-  if (!OscillatorNode.prototype.start) OscillatorNode.prototype.start = OscillatorNode.prototype.noteOn;
-  if (!OscillatorNode.prototype.stop) OscillatorNode.prototype.stop = OscillatorNode.prototype.noteOff;
-
-  if(!window[LILSYNTH]){
-    window[LILSYNTH] = new AudioContext;
-  }
+function setupLilSynth(owner) {
+  const existing = synths.get(owner);
+  if (existing) return existing.context;
+  const AudioContext = window.AudioContext || window.webkitAudioContext ||
+    window.mozAudioContext || window.oAudioContext;
+  if (!AudioContext) return null;
+  const context = new AudioContext();
+  synths.set(owner, { context, voices: new Map() });
+  return context;
 }
 
-function soundKey(key, frequency) {
-  // console.log(key,"on!!!!");
-  let context = window[LILSYNTH];
-  if(!key.filter){
-    key.filter = context.createBiquadFilter();
-    key.filter.frequency.value = frequency;
-    key.filter.type = "bandpass";
-  }
-  let now = context.currentTime;
+function createVoice(context, frequency) {
+  const filter = context.createBiquadFilter();
+  filter.frequency.value = frequency;
+  filter.type = 'bandpass';
 
-  key.gain = context.createGain();
-  key.gain.gain.value = 0.000001;
-  key.gain.connect(context.destination);
+  const gain = context.createGain();
+  gain.gain.value = 0.000001;
+  filter.connect(gain);
+  gain.connect(context.destination);
 
-  key.filter.connect(key.gain);
-
-  if (key.oscillator){
-    key.oscillator.stop(now+0.4)
-  };
-  if (key.oscillator2){
-    key.oscillator2.stop(now+0.4);
-  };
-  key.oscillator = context.createOscillator();
-  key.oscillator2 = context.createOscillator();
-  key.oscillator.type = "sawtooth";
-  key.oscillator.frequency.value = frequency/2;
-  key.oscillator.connect(key.filter);
-  key.oscillator2.frequency.value = frequency;
-  key.oscillator2.connect(key.gain);
-  // key.gain.gain.linearRampToValueAtTime(0.05, context.currentTime + 0.05);
-  // key.gain.gain.exponentialRampToValueAtTime(0.05, context.currentTime + 0.1);
-  key.gain.gain.setTargetAtTime(0.05, now, 0.04);
-  key.oscillator.start(now);
-  key.oscillator2.start(now);
-  key.oscillator.stop(now + 40);
-  key.oscillator2.stop(now + 40);
+  const oscillator = context.createOscillator();
+  const oscillator2 = context.createOscillator();
+  oscillator.type = 'sawtooth';
+  oscillator.frequency.value = frequency / 2;
+  oscillator2.frequency.value = frequency;
+  oscillator.connect(filter);
+  oscillator2.connect(gain);
+  oscillator.start();
+  oscillator2.start();
+  return { filter, gain, oscillator, oscillator2 };
 }
 
-function dampKey(key) {
-  let decay = 0.4;
-  // console.log("tone off!!!!");
-  let context = window[LILSYNTH];
-  if (key.gain){
-    key.gain.gain.setTargetAtTime(0.000001, context.currentTime, 0.05);
-    let gain = key.gain
-    setTimeout(function(){gain.disconnect()}, decay*1000)
+function soundKey(owner, key, frequency, level = 0.05) {
+  const context = setupLilSynth(owner);
+  if (!context) return;
+  try {
+    const resuming = context.resume?.();
+    resuming?.catch?.(() => {});
+  } catch { /* gesture-time resume is best effort */ }
+  const state = synths.get(owner);
+  let voice = state.voices.get(key);
+  if (!voice) {
+    voice = createVoice(context, frequency);
+    state.voices.set(key, voice);
   }
-  if(key.oscillator) key.oscillator.stop(context.currentTime + decay);
-  if(key.oscillator2) key.oscillator2.stop(context.currentTime + decay);
+  voice.filter.frequency.value = frequency;
+  voice.oscillator.frequency.value = frequency / 2;
+  voice.oscillator2.frequency.value = frequency;
+  const now = context.currentTime;
+  voice.gain.gain.cancelScheduledValues?.(now);
+  voice.gain.gain.setTargetAtTime(level, now, 0.04);
 }
 
+function dampKey(owner, key) {
+  const state = synths.get(owner);
+  const voice = state?.voices.get(key);
+  if (!voice) return;
+  const now = state.context.currentTime;
+  voice.gain.gain.cancelScheduledValues?.(now);
+  voice.gain.gain.setTargetAtTime(0.000001, now, 0.05);
+}
 
-export { setupLilSynth, soundKey, dampKey };
+function releaseLilSynthKey(owner, key) {
+  const state = synths.get(owner);
+  const voice = state?.voices.get(key);
+  if (!voice) return;
+  stopVoice(voice.oscillator, state.context.currentTime);
+  stopVoice(voice.oscillator2, state.context.currentTime);
+  voice.oscillator.disconnect();
+  voice.oscillator2.disconnect();
+  voice.filter.disconnect();
+  voice.gain.disconnect();
+  state.voices.delete(key);
+}
+
+function disposeLilSynth(owner) {
+  const state = synths.get(owner);
+  if (!state) return;
+  for (const key of [...state.voices.keys()]) releaseLilSynthKey(owner, key);
+  synths.delete(owner);
+  try {
+    const closing = state.context.close?.();
+    closing?.catch?.(() => {});
+  } catch { /* teardown is best effort */ }
+}
+
+function stopVoice(voice, when) {
+  if (!voice) return;
+  try { voice.stop(when); } catch { /* already stopped */ }
+}
+
+export {
+  setupLilSynth,
+  soundKey,
+  dampKey,
+  releaseLilSynthKey,
+  disposeLilSynth
+};

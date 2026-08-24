@@ -40,7 +40,8 @@ all-around-keyboard {
 
 /* Slotted indicator children - positioned via CSS custom properties */
 ::slotted([data-pitch]),
-::slotted([data-key]) {
+::slotted([data-key]),
+::slotted([data-aak-indicator]) {
   position: absolute;
   left: var(--indicator-x, 50%);
   top: var(--indicator-y, 50%);
@@ -52,6 +53,18 @@ all-around-keyboard {
 /* Show indicators once positioned by keyboard */
 ::slotted([data-positioned]) {
   visibility: visible;
+}
+
+/* Default marker for the optional typed indicator API. Callers can override
+   it through ::part(indicator) or provide their own element. */
+::slotted([data-aak-indicator]) {
+  box-sizing: border-box;
+  width: var(--indicator-size, 0.75rem);
+  height: var(--indicator-size, 0.75rem);
+  border: var(--indicator-border, 2px solid white);
+  border-radius: 50%;
+  background: var(--indicator-fill, #005bff);
+  pointer-events: none;
 }
 
 .key {
@@ -97,6 +110,14 @@ all-around-keyboard {
   transition-duration: 0s !important;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .key,
+  .key--modulating {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
+
 .key--pressed,
 .key--highlight.key--pressed.key--upper,
 .key--highlight.key--pressed.key--lower {
@@ -125,4 +146,15 @@ all-around-keyboard {
 
 .key-label--upper {
   fill: var(--key-label-upper-fill, #fff);
+}
+
+/* Typed labels are independent keyed annotations. Their text, accessible
+   label, and optional class come from the adapter rather than note-name
+   policy in the component. */
+.annotation-label {
+  fill: var(--annotation-label-fill, currentColor);
+  font-family: var(--annotation-label-font, system-ui, -apple-system, sans-serif);
+  font-size: var(--annotation-label-font-size, 12px);
+  font-weight: var(--annotation-label-font-weight, 600);
+  user-select: none;
 }
