@@ -4,6 +4,7 @@
   "version": "1.9.0",
   "description": "Round piano keyboards with Web Components + d3-shape",
   "type": "module",
+  "types": "./src/main.d.ts",
   "main": "dist/all-around-keyboard.js",
   "module": "dist/all-around-keyboard.esm.js",
   "browser": "dist/all-around-keyboard.min.js",
@@ -11,12 +12,14 @@
   "jsdelivr": "dist/all-around-keyboard.min.js",
   "exports": {
     ".": {
+      "types": "./src/main.d.ts",
       "import": "./dist/all-around-keyboard.esm.js",
       "require": "./dist/all-around-keyboard.js",
       "browser": "./dist/all-around-keyboard.min.js",
       "default": "./dist/all-around-keyboard.esm.js"
     },
     "./min": {
+      "types": "./src/main.d.ts",
       "import": "./dist/all-around-keyboard.esm.min.js",
       "require": "./dist/all-around-keyboard.min.js",
       "default": "./dist/all-around-keyboard.esm.min.js"

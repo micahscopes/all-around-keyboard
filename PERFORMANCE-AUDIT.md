@@ -190,13 +190,13 @@ The GitHub release contains these reproducible artifacts:
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `all-around-keyboard.js` | 125443 | `0ab8aa4407687bf3389c3afa8a37511810942f24a3f4950885f5804a9eb8859f` |
-| `all-around-keyboard.js.map` | 259248 | `7043d6a020953efd103dc242544d5b2c9cca19594b0052528adfcf221e1c7096` |
+| `all-around-keyboard.js.map` | 259169 | `7043d6a020953efd103dc242544d5b2c9cca19594b0052528adfcf221e1c7096` |
 | `all-around-keyboard.min.js` | 69263 | `04c9824156535cc74e98676c04af2897652668440622cdb9205f69739d5d0d11` |
-| `all-around-keyboard.min.js.map` | 206202 | `e2672b945c00f5021c8d798ce64a85a36e6f2032b82f1b47d7a75ae82a991f9f` |
+| `all-around-keyboard.min.js.map` | 206123 | `e2672b945c00f5021c8d798ce64a85a36e6f2032b82f1b47d7a75ae82a991f9f` |
 | `all-around-keyboard.esm.js` | 119114 | `b5ea10599dc167d9bdf0e8979a97bbc60831989d8d6ff0df1b4e464b51ec31cc` |
-| `all-around-keyboard.esm.js.map` | 259229 | `3c9196fa47b576d784a7d9e3f7593b0b7faae3a5c3fa433f5617cb851bba0532` |
+| `all-around-keyboard.esm.js.map` | 259150 | `3c9196fa47b576d784a7d9e3f7593b0b7faae3a5c3fa433f5617cb851bba0532` |
 | `all-around-keyboard.esm.min.js` | 69229 | `bdf2cf76fd1605f5d3923c0ac3b6758f22dbf1d6ead4d5c9f2fdc9aafbcf4a59` |
-| `all-around-keyboard.esm.min.js.map` | 206237 | `9b9669e72d29d9d730d3b0c102a824c7d92df21a21d5da1c9773c8278a67d27a` |
+| `all-around-keyboard.esm.min.js.map` | 206158 | `9b9669e72d29d9d730d3b0c102a824c7d92df21a21d5da1c9773c8278a67d27a` |
 
 The remaining boundaries are deliberately outside this release:
 
