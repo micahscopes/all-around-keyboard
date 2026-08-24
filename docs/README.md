@@ -27,7 +27,7 @@ Or via JavaScript:
 ```javascript
 const kb = document.querySelector('all-around-keyboard');
 
-// Set pressed keys (visual + synth if enabled)
+// Set pressed keys (visual projection only)
 kb.pressedKeys = [0, 4, 7];
 
 // Highlight notes across all octaves
@@ -35,6 +35,13 @@ kb.litNotes = [0, 4, 7];
 
 // Hover effect
 kb.hoveredKeys = [2];
+
+// Prefer one atomic patch for high-rate updates.
+kb.updateState({
+  pressedKeys: [36],
+  litNotes: [0, 4, 7],
+  hoveredKeys: [38]
+});
 ```
 
 **State attributes:**
@@ -44,6 +51,12 @@ kb.hoveredKeys = [2];
 
 ### Events (user interaction)
 ```javascript
+kb.addEventListener('keyboardintent', (event) => {
+  const { type, interactionId, key, note, source } = event.detail;
+  // press -> release -> activate; cancellation has no activate
+});
+
+// Legacy press-time compatibility event:
 kb.addEventListener('keyclick', (e) => {
   console.log('Clicked:', e.detail.index, 'Note:', e.detail.note);
 });
@@ -56,6 +69,12 @@ kb.addEventListener('keyunhover', (e) => {
   console.log('Unhover:', e.detail.index);
 });
 ```
+
+The modern event always distinguishes absolute `key` from period-relative
+`note`. Typed overlays, indicators, labels, revisioned graph anchors, custom
+frequency providers, and projection revisions are documented in the
+[repository README](../README.md). The demonstration synth is gesture-lazy and
+visual state changes never trigger audio.
 
 ### CSS custom properties
 ```css
